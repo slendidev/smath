@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(SmathExamples CXX)
+project(SmathExamples LANGUAGES CXX VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,14 +8,18 @@ option(BUILD_EXAMPLES "Build example programs" ON)
 option(BUILD_TESTS "Build unit tests" ON)
 
 add_library(smath INTERFACE)
-target_include_directories(smath INTERFACE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(smath
+	INTERFACE
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<INSTALL_INTERFACE:include>
+)
 add_library(smath::smath ALIAS smath)
 
 include(CMakePackageConfigHelpers)
 install(TARGETS smath
 	EXPORT smathTargets
 )
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+install(DIRECTORY include/ DESTINATION include)
 
 install(EXPORT smathTargets
 	NAMESPACE smath::
