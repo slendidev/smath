@@ -11,6 +11,46 @@ add_library(smath INTERFACE)
 target_include_directories(smath INTERFACE ${CMAKE_SOURCE_DIR}/include)
 add_library(smath::smath ALIAS smath)
 
+include(CMakePackageConfigHelpers)
+install(TARGETS smath
+	EXPORT smathTargets
+)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+
+install(EXPORT smathTargets
+	NAMESPACE smath::
+	FILE smathTargets.cmake
+	DESTINATION lib/cmake/smath
+)
+
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/smathConfigVersion.cmake"
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/smathConfig.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/smathConfig.cmake"
+	INSTALL_DESTINATION "lib/cmake/smath"
+)
+
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/smath.pc.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/smath.pc"
+	@ONLY
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/smath.pc"
+	DESTINATION lib/pkgconfig
+)
+
+install(FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/smathConfig.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/smathConfigVersion.cmake"
+	DESTINATION lib/cmake/smath
+)
+
 if(BUILD_EXAMPLES)
 	file(GLOB EXAMPLE_SOURCES "${CMAKE_SOURCE_DIR}/examples/*.cpp")
 	foreach(EXAMPLE_FILE ${EXAMPLE_SOURCES})
