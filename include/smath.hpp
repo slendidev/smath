@@ -1,5 +1,3 @@
-#pragma once
-
 /* Copyright 2025 Slendi <slendi@socopon.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +15,8 @@
  * You can define the following macros to change functionality:
  * - SMATH_IMPLICIT_CONVERSIONS
  */
+
+#pragma once
 
 #include <array>
 #include <cmath>
