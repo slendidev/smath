@@ -1,4 +1,5 @@
-/* smath - Single-file linear algebra math library for C++23.
+/*
+ * smath - Single-file linear algebra math library for C++23.
  *
  * Copyright 2025 Slendi <slendi@socopon.com>
  *
