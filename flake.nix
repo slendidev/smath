@@ -1,8 +1,5 @@
-let
-  desc = "Single-file linear algebra math library for C++23.";
-in
 {
-  description = desc;
+  description = "Single-file linear algebra math library for C++23.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -50,17 +47,17 @@ in
                 prefix = "${placeholder "out"}";
                 includedir = "${prefix}/include";
               };
-              description = desc;
+              description = "Single-file linear algebra math library for C++23.";
             })
           ];
 
           dontBuild = true;
 
           installPhase = ''
-            						runHook preInstall
-                        mkdir -p $out/include
-                        cp include/*.hpp $out/include/
-            						runHook postInstall
+            runHook preInstall
+            mkdir -p $out/include
+            cp include/*.hpp $out/include/
+            runHook postInstall
           '';
 
           meta = with pkgs.lib; {
