@@ -25,7 +25,13 @@
 #include <cmath>
 #include <cstddef>
 #include <format>
+#include <numbers>
+#include <optional>
 #include <type_traits>
+
+#ifndef SMATH_ANGLE_UNIT
+#define SMATH_ANGLE_UNIT rad
+#endif // SMATH_ANGLE_UNIT
 
 namespace smath {
 
@@ -34,6 +40,38 @@ template <std::size_t N, typename T>
 struct Vec;
 
 namespace detail {
+
+#define SMATH_STR(x) #x
+#define SMATH_XSTR(x) SMATH_STR(x)
+
+consteval bool streq(const char *a, const char *b) {
+  for (;; ++a, ++b) {
+    if (*a != *b)
+      return false;
+    if (*a == '\0')
+      return true;
+  }
+}
+
+enum class AngularUnit {
+  Radians,
+  Degrees,
+  Turns,
+};
+
+consteval std::optional<AngularUnit> parse_unit(const char *s) {
+  if (streq(s, "rad"))
+    return AngularUnit::Radians;
+  if (streq(s, "deg"))
+    return AngularUnit::Degrees;
+  if (streq(s, "turns"))
+    return AngularUnit::Turns;
+  return std::nullopt;
+}
+
+constexpr auto SMATH_ANGLE_UNIT_ID = parse_unit(SMATH_XSTR(SMATH_ANGLE_UNIT));
+static_assert(SMATH_ANGLE_UNIT_ID != std::nullopt,
+              "Invalid SMATH_ANGLE_UNIT. Should be rad, deg, or turns.");
 
 template <std::size_t N> struct FixedString {
   char data[N]{};
@@ -401,6 +439,42 @@ using Vec2d = Vec<2, double>;
 using Vec3d = Vec<3, double>;
 using Vec4d = Vec<4, double>;
 
+template <class T> constexpr auto deg(T const value) -> T {
+  if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
+    return value;
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Radians) {
+    return value * static_cast<T>(std::numbers::pi / 180.0);
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Turns) {
+    return value / static_cast<T>(360.0);
+  }
+}
+
+template <class T> constexpr auto rad(T const value) -> T {
+  if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
+    return value * static_cast<T>(180.0 / std::numbers::pi);
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Radians) {
+    return value;
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Turns) {
+    return value / (static_cast<T>(2.0) * static_cast<T>(std::numbers::pi));
+  }
+}
+
+template <class T> constexpr auto turns(T const value) -> T {
+  if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
+    return value * static_cast<T>(360.0);
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Radians) {
+    return value * (static_cast<T>(2.0) * static_cast<T>(std::numbers::pi));
+  } else if constexpr (detail::SMATH_ANGLE_UNIT_ID ==
+                       detail::AngularUnit::Turns) {
+    return value;
+  }
+}
+
 } // namespace smath
 
 template <std::size_t N, typename T>
@@ -435,4 +509,5 @@ struct tuple_element<I, smath::Vec<N, T>> {
   static_assert(I < N);
   using type = T;
 };
+
 } // namespace std
