@@ -225,14 +225,14 @@ public:
   VEC_OP_ASSIGN(/)
 #undef VEC_OP_ASSIGN
 
-  constexpr bool operator==(Vec const &v) const noexcept {
+  constexpr auto operator==(Vec const &v) const noexcept -> bool {
     for (std::size_t i = 0; i < N; ++i)
       if ((*this)[i] != v[i])
         return false;
     return true;
   }
 
-  constexpr bool operator!=(Vec const &v) const noexcept {
+  constexpr auto operator!=(Vec const &v) const noexcept -> bool {
     return !(*this == v);
   }
 
@@ -252,34 +252,33 @@ public:
 
   template <typename U = T>
     requires std::is_floating_point_v<U>
-  constexpr Vec normalized_safe(U eps = eps_default) const noexcept {
+  constexpr auto normalized_safe(U eps = EPS_DEFAULT) const noexcept -> Vec {
     auto m = magnitude();
     return (m > eps) ? (*this) / m : Vec{};
   }
   template <typename U = T>
     requires std::is_floating_point_v<U>
-  constexpr Vec normalize_safe(U eps = eps_default) const noexcept {
+  constexpr auto normalize_safe(U eps = EPS_DEFAULT) const noexcept -> Vec {
     return normalized_safe(eps);
   }
 
-  [[nodiscard]] constexpr auto normalized() noexcept -> Vec<N, T> const
+  [[nodiscard]] constexpr auto normalized() noexcept -> Vec<N, T>
     requires std::is_floating_point_v<T>
   {
     return (*this) / this->magnitude();
   }
-  [[nodiscard]] constexpr auto normalize() noexcept -> Vec<N, T> const
+  [[nodiscard]] constexpr auto normalize() noexcept -> Vec<N, T>
     requires std::is_floating_point_v<T>
   {
     return this->normalized();
   }
-  [[nodiscard]] constexpr auto unit() noexcept -> Vec<N, T> const
+  [[nodiscard]] constexpr auto unit() noexcept -> Vec<N, T>
     requires std::is_floating_point_v<T>
   {
     return this->normalized();
   }
 
-  [[nodiscard]] constexpr auto dot(Vec<N, T> const &other) const noexcept
-      -> T const {
+  [[nodiscard]] constexpr auto dot(Vec<N, T> const &other) const noexcept -> T {
     T res = 0;
     for (std::size_t i = 0; i < N; ++i) {
       res += (*this)[i] * other[i];
@@ -287,11 +286,11 @@ public:
     return res;
   }
 
-  static constexpr T eps_default = T(1e-6);
+  static constexpr T EPS_DEFAULT = T(1e-6);
   template <class U = T>
     requires std::is_floating_point_v<U>
   [[nodiscard]] constexpr auto
-  approx_equal(Vec const &rhs, U eps = eps_default) const noexcept {
+  approx_equal(Vec const &rhs, U eps = EPS_DEFAULT) const noexcept {
     using F = std::conditional_t<std::is_floating_point_v<U>, U, double>;
     for (size_t i = 0; i < N; ++i)
       if (std::abs(F((*this)[i] - rhs[i])) > F(eps))
@@ -312,19 +311,19 @@ public:
 
   template <typename U = T>
     requires(N == 3)
-  constexpr Vec cross(const Vec &r) const noexcept {
+  constexpr auto cross(const Vec &r) const noexcept -> Vec {
     return {(*this)[1] * r[2] - (*this)[2] * r[1],
             (*this)[2] * r[0] - (*this)[0] * r[2],
             (*this)[0] * r[1] - (*this)[1] * r[0]};
   }
 
-  constexpr T distance(Vec const &r) const noexcept
+  constexpr auto distance(Vec const &r) const noexcept -> T
     requires std::is_floating_point_v<T>
   {
     return (*this - r).magnitude();
   }
 
-  constexpr Vec project_onto(Vec const &n) const noexcept
+  constexpr auto project_onto(Vec const &n) const noexcept -> Vec
     requires std::is_floating_point_v<T>
   {
     auto d = this->dot(n);
@@ -352,7 +351,7 @@ public:
 
   template <class U>
     requires(std::is_arithmetic_v<U> && !std::is_same_v<U, T>)
-  constexpr Vec &operator=(Vec<N, U> const &rhs) noexcept {
+  constexpr auto operator=(Vec<N, U> const &rhs) noexcept -> Vec & {
     for (std::size_t i = 0; i < N; ++i)
       (*this)[i] = static_cast<T>(rhs[i]);
     return *this;
