@@ -547,6 +547,159 @@ template <class T> struct Quaternion : Vec<4, T> {
   }
 };
 
+template <std::size_t R, std::size_t C, typename T = float>
+  requires std::is_arithmetic_v<T>
+struct Mat : std::array<Vec<R, T>, C> {
+  using Base = std::array<Vec<R, T>, C>;
+  using Base::operator[];
+
+  constexpr Mat() noexcept {
+    for (auto &col : *this)
+      col = Vec<R, T>{};
+  }
+
+  constexpr explicit Mat(T const &diag) noexcept
+    requires(R == C)
+  {
+    for (std::size_t c = 0; c < C; ++c) {
+      (*this)[c] = Vec<R, T>{};
+      (*this)[c][c] = diag;
+    }
+  }
+
+  template <typename... Cols>
+    requires(sizeof...(Cols) == C &&
+             (std::same_as<std::remove_cvref_t<Cols>, Vec<R, T>> && ...))
+  constexpr Mat(Cols const &...cols) noexcept : Base{cols...} {}
+
+  constexpr auto col(std::size_t j) noexcept -> Vec<R, T> & {
+    return (*this)[j];
+  }
+  constexpr auto col(std::size_t j) const noexcept -> Vec<R, T> const & {
+    return (*this)[j];
+  }
+
+  constexpr auto operator()(std::size_t row, std::size_t col) noexcept -> T & {
+    return (*this)[col][row];
+  }
+  constexpr auto operator()(std::size_t row, std::size_t col) const noexcept
+      -> T const & {
+    return (*this)[col][row];
+  }
+
+  constexpr auto operator-() const noexcept -> Mat {
+    Mat r{};
+    for (std::size_t c = 0; c < C; ++c)
+      r[c] = -(*this)[c];
+    return r;
+  }
+
+  constexpr auto operator+=(Mat const &rhs) noexcept -> Mat & {
+    for (std::size_t c = 0; c < C; ++c)
+      (*this)[c] += rhs[c];
+    return *this;
+  }
+  constexpr auto operator-=(Mat const &rhs) noexcept -> Mat & {
+    for (std::size_t c = 0; c < C; ++c)
+      (*this)[c] -= rhs[c];
+    return *this;
+  }
+  friend constexpr auto operator+(Mat lhs, Mat const &rhs) noexcept -> Mat {
+    lhs += rhs;
+    return lhs;
+  }
+  friend constexpr auto operator-(Mat lhs, Mat const &rhs) noexcept -> Mat {
+    lhs -= rhs;
+    return lhs;
+  }
+
+  constexpr auto operator*=(T const &s) noexcept -> Mat & {
+    for (std::size_t c = 0; c < C; ++c)
+      (*this)[c] *= s;
+    return *this;
+  }
+  constexpr auto operator/=(T const &s) noexcept -> Mat & {
+    for (std::size_t c = 0; c < C; ++c)
+      (*this)[c] /= s;
+    return *this;
+  }
+  friend constexpr auto operator*(Mat lhs, T const &s) noexcept -> Mat {
+    lhs *= s;
+    return lhs;
+  }
+  friend constexpr auto operator*(T const &s, Mat rhs) noexcept -> Mat {
+    rhs *= s;
+    return rhs;
+  }
+  friend constexpr auto operator/(Mat lhs, T const &s) noexcept -> Mat {
+    lhs /= s;
+    return lhs;
+  }
+
+  constexpr auto operator==(Mat const &rhs) const noexcept -> bool {
+    for (std::size_t c = 0; c < C; ++c)
+      if (!((*this)[c] == rhs[c]))
+        return false;
+    return true;
+  }
+  constexpr auto operator!=(Mat const &rhs) const noexcept -> bool {
+    return !(*this == rhs);
+  }
+
+  static constexpr T EPS_DEFAULT = T(1e-6);
+  template <class U = T>
+    requires std::is_floating_point_v<U>
+  constexpr auto approx_equal(Mat const &rhs,
+                              U eps = EPS_DEFAULT) const noexcept -> bool {
+    for (std::size_t c = 0; c < C; ++c)
+      if (!(*this)[c].approx_equal(rhs[c], eps))
+        return false;
+    return true;
+  }
+
+  constexpr auto transposed() const noexcept -> Mat<R, C, T> {
+    Mat<C, R, T> r{};
+    for (std::size_t c = 0; c < C; ++c)
+      for (std::size_t r_idx = 0; r_idx < R; ++r_idx)
+        r(r_idx, c) = (*this)(c, r_idx);
+    return r;
+  }
+
+  static constexpr auto identity() noexcept -> Mat<R, C, T>
+    requires(R == C)
+  {
+    Mat<R, C, T> m{};
+    for (std::size_t i = 0; i < R; ++i)
+      m(i, i) = T(1);
+    return m;
+  }
+};
+
+template <std::size_t R, std::size_t C, typename T>
+constexpr Vec<R, T> operator*(Mat<R, C, T> const &m,
+                              Vec<C, T> const &v) noexcept {
+  Vec<R, T> out{};
+  for (std::size_t c = 0; c < C; ++c)
+    out += m.col(c) * v[c];
+  return out;
+}
+
+// Matrix * Matrix
+template <std::size_t R, std::size_t C, std::size_t K, typename T>
+constexpr Mat<R, K, T> operator*(Mat<R, C, T> const &a,
+                                 Mat<C, K, T> const &b) noexcept {
+  Mat<R, K, T> out{};
+  for (std::size_t k = 0; k < K; ++k) {
+    for (std::size_t r = 0; r < R; ++r) {
+      T sum = T(0);
+      for (std::size_t c = 0; c < C; ++c)
+        sum += a(r, c) * b(r, k);
+      out(r, k) = sum;
+    }
+  }
+  return out;
+}
+
 } // namespace smath
 
 template <std::size_t N, typename T>
