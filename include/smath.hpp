@@ -517,6 +517,36 @@ template <class T> constexpr auto turns(T const value) -> T {
   }
 }
 
+template <class T> struct Quaternion : Vec<4, T> {
+  using Base = Vec<4, T>;
+  using Base::Base;
+  using Base::operator=;
+
+  constexpr Base &vec() noexcept { return *this; }
+  constexpr Base const &vec() const noexcept { return *this; }
+
+  constexpr T &x() noexcept { return Base::x(); }
+  constexpr T &y() noexcept { return Base::y(); }
+  constexpr T &z() noexcept { return Base::z(); }
+  constexpr T &w() noexcept { return Base::w(); }
+
+  constexpr auto operator*(Quaternion const &rhs) const noexcept -> Quaternion {
+    Quaternion r;
+    auto const &a = *this;
+
+    r.x() =
+        a.w() * rhs.x() + a.x() * rhs.w() + a.y() * rhs.z() - a.z() * rhs.y();
+    r.y() =
+        a.w() * rhs.y() - a.x() * rhs.z() + a.y() * rhs.w() + a.z() * rhs.x();
+    r.z() =
+        a.w() * rhs.z() + a.x() * rhs.y() - a.y() * rhs.x() + a.z() * rhs.w();
+    r.w() =
+        a.w() * rhs.w() - a.x() * rhs.x() - a.y() * rhs.y() - a.z() * rhs.z();
+
+    return r;
+  }
+};
+
 } // namespace smath
 
 template <std::size_t N, typename T>
