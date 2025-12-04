@@ -553,6 +553,15 @@ struct Mat : std::array<Vec<R, T>, C> {
   using Base = std::array<Vec<R, T>, C>;
   using Base::operator[];
 
+  constexpr auto operator[](std::size_t const row, std::size_t const column)
+      -> T & {
+    return col(column)[row];
+  }
+  constexpr auto operator[](std::size_t const row,
+                            std::size_t const column) const -> T const & {
+    return col(column)[row];
+  }
+
   constexpr Mat() noexcept {
     for (auto &col : *this)
       col = Vec<R, T>{};
@@ -636,28 +645,31 @@ struct Mat : std::array<Vec<R, T>, C> {
     return lhs;
   }
 
-  constexpr auto operator==(Mat const &rhs) const noexcept -> bool {
+  [[nodiscard]] constexpr auto operator==(Mat const &rhs) const noexcept
+      -> bool {
     for (std::size_t c = 0; c < C; ++c)
       if (!((*this)[c] == rhs[c]))
         return false;
     return true;
   }
-  constexpr auto operator!=(Mat const &rhs) const noexcept -> bool {
+  [[nodiscard]] constexpr auto operator!=(Mat const &rhs) const noexcept
+      -> bool {
     return !(*this == rhs);
   }
 
   static constexpr T EPS_DEFAULT = T(1e-6);
   template <class U = T>
     requires std::is_floating_point_v<U>
-  constexpr auto approx_equal(Mat const &rhs,
-                              U eps = EPS_DEFAULT) const noexcept -> bool {
+  [[nodiscard]] constexpr auto approx_equal(Mat const &rhs,
+                                            U eps = EPS_DEFAULT) const noexcept
+      -> bool {
     for (std::size_t c = 0; c < C; ++c)
       if (!(*this)[c].approx_equal(rhs[c], eps))
         return false;
     return true;
   }
 
-  constexpr auto transposed() const noexcept -> Mat<R, C, T> {
+  [[nodiscard]] constexpr auto transposed() const noexcept -> Mat<C, R, T> {
     Mat<C, R, T> r{};
     for (std::size_t c = 0; c < C; ++c)
       for (std::size_t r_idx = 0; r_idx < R; ++r_idx)
@@ -665,7 +677,7 @@ struct Mat : std::array<Vec<R, T>, C> {
     return r;
   }
 
-  static constexpr auto identity() noexcept -> Mat<R, C, T>
+  [[nodiscard]] static constexpr auto identity() noexcept -> Mat<R, C, T>
     requires(R == C)
   {
     Mat<R, C, T> m{};
@@ -676,8 +688,8 @@ struct Mat : std::array<Vec<R, T>, C> {
 };
 
 template <std::size_t R, std::size_t C, typename T>
-constexpr Vec<R, T> operator*(Mat<R, C, T> const &m,
-                              Vec<C, T> const &v) noexcept {
+[[nodiscard]] constexpr Vec<R, T> operator*(Mat<R, C, T> const &m,
+                                            Vec<C, T> const &v) noexcept {
   Vec<R, T> out{};
   for (std::size_t c = 0; c < C; ++c)
     out += m.col(c) * v[c];
@@ -686,18 +698,225 @@ constexpr Vec<R, T> operator*(Mat<R, C, T> const &m,
 
 // Matrix * Matrix
 template <std::size_t R, std::size_t C, std::size_t K, typename T>
-constexpr Mat<R, K, T> operator*(Mat<R, C, T> const &a,
-                                 Mat<C, K, T> const &b) noexcept {
+[[nodiscard]] constexpr Mat<R, K, T> operator*(Mat<R, C, T> const &a,
+                                               Mat<C, K, T> const &b) noexcept {
   Mat<R, K, T> out{};
   for (std::size_t k = 0; k < K; ++k) {
     for (std::size_t r = 0; r < R; ++r) {
       T sum = T(0);
       for (std::size_t c = 0; c < C; ++c)
-        sum += a(r, c) * b(r, k);
+        sum += a(r, c) * b(c, k);
       out(r, k) = sum;
     }
   }
   return out;
+}
+
+// Mat3 transformations
+template <typename T>
+[[nodiscard]] inline auto translate(Mat<3, 3, T> const &m, Vec<2, T> const &v)
+    -> Mat<3, 3, T> {
+  Mat<3, 3, T> res{m};
+  res[2] = m[0] * v[0] + m[1] * v[1] + m[2];
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto rotate(Mat<3, 3, T> const &m, T const angle)
+    -> Mat<3, 3, T> {
+  Mat<3, 3, T> res;
+
+  T const c{std::cos(angle)};
+  T const s{std::sin(angle)};
+
+  res[0] = m[0] * c + m[1] * s;
+  res[1] = m[0] * -s + m[1] * c;
+  res[2] = m[2];
+
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto scale(Mat<3, 3, T> const &m, Vec<2, T> const &v)
+    -> Mat<3, 3, T> {
+  Mat<3, 3, T> res;
+
+  res[0] = m[0] * v[0];
+  res[1] = m[1] * v[1];
+  res[2] = m[2];
+
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto shear_x(Mat<3, 3, T> const &m, T const v)
+    -> Mat<3, 3, T> {
+  Mat<3, 3, T> res{1};
+  res[1][0] = v;
+  return m * res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto shear_y(Mat<3, 3, T> const &m, T const v)
+    -> Mat<3, 3, T> {
+  Mat<3, 3, T> res{1};
+  res[0][1] = v;
+  return m * res;
+}
+
+// Mat4 transformations
+template <typename T>
+[[nodiscard]] inline auto translate(Mat<4, 4, T> const &m, Vec<3, T> const &v)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res{m};
+  res[3] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3];
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto rotate(Mat<4, 4, T> const &m, T const angle)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res;
+
+  T const c{std::cos(angle)};
+  T const s{std::sin(angle)};
+
+  res[0] = m[0] * c + m[1] * s;
+  res[1] = m[0] * -s + m[1] * c;
+  res[2] = m[2];
+  res[3] = m[3];
+
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto scale(Mat<4, 4, T> const &m, Vec<3, T> const &v)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res;
+
+  res[0] = m[0] * v[0];
+  res[1] = m[1] * v[1];
+  res[2] = m[2] * v[2];
+  res[3] = m[3];
+
+  return res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto shear_x(Mat<4, 4, T> const &m, T const v)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res{1};
+  res[0, 1] = v;
+  return m * res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto shear_y(Mat<4, 4, T> const &m, T const v)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res{1};
+  res[1, 0] = v;
+  return m * res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto shear_z(Mat<4, 4, T> const &m, T const v)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res{1};
+  res[2, 0] = v;
+  return m * res;
+}
+
+template <typename T>
+[[nodiscard]] inline auto
+matrix_ortho3d(T const left, T const right, T const bottom, T const top,
+               T const near, T const far, bool const flip_z_axis = true)
+    -> Mat<4, 4, T> {
+  Mat<4, 4, T> res{};
+
+  res[0, 0] = 2 / (right - left);
+  res[1, 1] = 2 / (top - bottom);
+  res[2, 2] = -2 / (far - near);
+  res[0, 3] = -(right + left) / (right - left);
+  res[1, 3] = -(top + bottom) / (top - bottom);
+  res[2, 3] = -(far + near) / (far - near);
+  res[3, 3] = 1;
+
+  if (flip_z_axis) {
+    res[2] = -res[2];
+  }
+
+  return res;
+}
+
+template <typename T>
+inline auto matrix_perspective(T fovy, T aspect, T znear, T zfar,
+                               bool flip_z_axis = false) -> Mat<4, 4, T> {
+  Mat<4, 4, T> m{};
+
+  T const f{1 / std::tan(fovy / T(2))};
+
+  m(0, 0) = f / aspect;
+  m(1, 1) = f;
+
+  if (!flip_z_axis) {
+    m(2, 2) = -(zfar + znear) / (zfar - znear);
+    m(2, 3) = -(T(2) * zfar * znear) / (zfar - znear);
+    m(3, 2) = -1;
+  } else {
+    m(2, 2) = (zfar + znear) / (zfar - znear);
+    m(2, 3) = (T(2) * zfar * znear) / (zfar - znear);
+    m(3, 2) = 1;
+  }
+
+  return m;
+}
+
+template <typename T>
+[[nodiscard]] inline auto
+matrix_look_at(Vec<3, T> const eye, Vec<3, T> const center, Vec<3, T> const up,
+               bool flip_z_axis = false) -> Mat<4, 4, T> {
+  auto f = (center - eye).normalized();
+  auto s = f.cross(up).normalized();
+  auto u = s.cross(f);
+
+  if (!flip_z_axis) {
+    return {
+        {s.x(), u.x(), -f.x(), 0},
+        {s.y(), u.y(), -f.y(), 0},
+        {s.z(), u.z(), -f.z(), 0},
+        {-s.dot(eye), -u.dot(eye), f.dot(eye), 1},
+    };
+  } else {
+    return {
+        {s.x(), u.x(), f.x(), 0},
+        {s.y(), u.y(), f.y(), 0},
+        {s.z(), u.z(), f.z(), 0},
+        {-s.dot(eye), -u.dot(eye), -f.dot(eye), 1},
+    };
+  }
+}
+
+template <typename T>
+[[nodiscard]] inline auto
+matrix_infinite_perspective(T const fovy, T const aspect, T const znear,
+                            bool flip_z_axis = false) -> Mat<4, 4, T> {
+  Mat<4, 4, T> m{};
+
+  T const f = 1 / std::tan(fovy / T(2));
+  m(0, 0) = f / aspect;
+  m(1, 1) = f;
+
+  if (!flip_z_axis) {
+    m(2, 2) = -1;
+    m(2, 3) = -T(2) * znear;
+    m(3, 2) = -1;
+  } else {
+    m(2, 2) = 1;
+    m(2, 3) = T(2) * znear;
+    m(3, 2) = 1;
+  }
+
+  return m;
 }
 
 } // namespace smath
