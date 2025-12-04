@@ -435,6 +435,8 @@ constexpr auto is_valid(char c) -> bool {
   case 'u':
   case 'v':
     return true;
+  default:
+    return false;
   }
   return false;
 }
