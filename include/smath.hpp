@@ -687,6 +687,14 @@ struct Mat : std::array<Vec<R, T>, C> {
   }
 };
 
+using Mat2 = Mat<2, 2>;
+using Mat3 = Mat<3, 3>;
+using Mat4 = Mat<4, 4>;
+
+using Mat2d = Mat<2, 2, double>;
+using Mat3d = Mat<3, 3, double>;
+using Mat4d = Mat<4, 4, double>;
+
 template <std::size_t R, std::size_t C, typename T>
 [[nodiscard]] constexpr Vec<R, T> operator*(Mat<R, C, T> const &m,
                                             Vec<C, T> const &v) noexcept {
