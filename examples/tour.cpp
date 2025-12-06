@@ -39,6 +39,9 @@ int main() {
   std::println("std::get<1>(v): {}", std::get<1>(v));
   auto [x, y, z] = v;
   std::println("Bindings: [{}, {}, {}]", x, y, z);
+  float x1{}, y1{}, z1{};
+  v.unpack(x1, y1, z1);
+  std::println("Unpacked: {}, {}, {}", x1, y1, z1);
 
   // Let's mix and match!
   Vec<6> v3(v, 7, swizzle<"zy">(v2));

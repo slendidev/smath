@@ -162,6 +162,16 @@ public:
   VEC_ACC(v, 2, 1)
 #undef VEC_ACC
 
+  template <class... Args, std::size_t... Is>
+  constexpr void unpack_impl(std::index_sequence<Is...>,
+                             Args &...args) noexcept {
+    ((args = (*this)[Is]), ...);
+  }
+
+  template <class... Args> constexpr void unpack(Args &...args) noexcept {
+    unpack_impl(std::index_sequence_for<Args...>{}, args...);
+  }
+
   // Unary
   constexpr auto operator-() noexcept -> Vec {
     Vec r{};
