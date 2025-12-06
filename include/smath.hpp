@@ -920,18 +920,18 @@ matrix_look_at(Vec<3, T> const eye, Vec<3, T> const center, Vec<3, T> const up,
   auto u = s.cross(f);
 
   if (!flip_z_axis) {
-    return {
-        {s.x(), u.x(), -f.x(), 0},
-        {s.y(), u.y(), -f.y(), 0},
-        {s.z(), u.z(), -f.z(), 0},
-        {-s.dot(eye), -u.dot(eye), f.dot(eye), 1},
+    return Mat<4, 4, T>{
+        Vec<4, T>{s.x(), s.y(), s.z(), 0},
+        Vec<4, T>{u.x(), u.y(), u.z(), 0},
+        Vec<4, T>{-f.x(), -f.y(), -f.z(), 0},
+        Vec<4, T>{-s.dot(eye), -u.dot(eye), f.dot(eye), 1},
     };
   } else {
-    return {
-        {s.x(), u.x(), f.x(), 0},
-        {s.y(), u.y(), f.y(), 0},
-        {s.z(), u.z(), f.z(), 0},
-        {-s.dot(eye), -u.dot(eye), -f.dot(eye), 1},
+    return Mat<4, 4, T>{
+        Vec<4, T>{s.x(), s.y(), s.z(), 0},
+        Vec<4, T>{u.x(), u.y(), u.z(), 0},
+        Vec<4, T>{f.x(), f.y(), f.z(), 0},
+        Vec<4, T>{-s.dot(eye), -u.dot(eye), -f.dot(eye), 1},
     };
   }
 }
