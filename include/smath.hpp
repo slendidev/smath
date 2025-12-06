@@ -742,6 +742,14 @@ template <typename T>
 }
 
 template <typename T>
+[[nodiscard]] inline auto translate(Vec<2, T> const &v) -> Mat<3, 3, T> {
+	Mat<3, 3, T> res{1};
+	res[2].x() = v.x();
+	res[2].y() = v.y();
+	return res;
+}
+
+template <typename T>
 [[nodiscard]] inline auto rotate(Mat<3, 3, T> const &m, T const angle)
     -> Mat<3, 3, T> {
   Mat<3, 3, T> res;
@@ -791,6 +799,16 @@ template <typename T>
   Mat<4, 4, T> res{m};
   res[3] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3];
   return res;
+}
+
+
+template <typename T>
+[[nodiscard]] inline auto translate(Vec<3, T> const &v) -> Mat<4, 4, T> {
+	Mat<4, 4, T> res{1};
+	res[3].x() = v.x();
+	res[3].y() = v.y();
+	res[3].z() = v.z();
+	return res;
 }
 
 template <typename T>
@@ -871,24 +889,26 @@ matrix_ortho3d(T const left, T const right, T const bottom, T const top,
 template <typename T>
 inline auto matrix_perspective(T fovy, T aspect, T znear, T zfar,
                                bool flip_z_axis = false) -> Mat<4, 4, T> {
-  Mat<4, 4, T> m{};
+	Mat<4, 4, T> m{};
 
-  T const f{1 / std::tan(fovy / T(2))};
+	T const f{T(1) / std::tan(fovy / T(2))};
 
-  m(0, 0) = f / aspect;
-  m(1, 1) = f;
+	m[0, 0] = f / aspect;
+	m[1, 1] = f;
 
-  if (!flip_z_axis) {
-    m(2, 2) = -(zfar + znear) / (zfar - znear);
-    m(2, 3) = -(T(2) * zfar * znear) / (zfar - znear);
-    m(3, 2) = -1;
-  } else {
-    m(2, 2) = (zfar + znear) / (zfar - znear);
-    m(2, 3) = (T(2) * zfar * znear) / (zfar - znear);
-    m(3, 2) = 1;
-  }
+	if (!flip_z_axis) {
+		m[2, 2] = -(zfar + znear) / (zfar - znear);
+		m[2, 3] = -(T(2) * zfar * znear) / (zfar - znear);
+		m[3, 2] = -1;
+		m[3, 3] = 0;
+	} else {
+		m[2, 2] = (zfar + znear) / (zfar - znear);
+		m[2, 3] = (T(2) * zfar * znear) / (zfar - znear);
+		m[3, 2] = 1;
+		m[3, 3] = 0;
+	}
 
-  return m;
+	return m;
 }
 
 template <typename T>
