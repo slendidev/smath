@@ -36,7 +36,11 @@
 
           src = ./.;
 
-          nativeBuildInputs = [ pkgs.copyPkgconfigItems ];
+          nativeBuildInputs = with pkgs; [
+            cmake
+            gtest
+            copyPkgconfigItems
+          ];
 
           pkgconfigItems = [
             (pkgs.makePkgconfigItem rec {
@@ -51,17 +55,18 @@
             })
           ];
 
-          dontBuild = true;
-
           installPhase = ''
             runHook preInstall
             mkdir -p $out/include
-            cp include/*.hpp $out/include/
+            cp ../include/smath.hpp $out/include/
             runHook postInstall
           '';
 
+          dontBuild = false;
+          doCheck = true;
+
           meta = with pkgs.lib; {
-            description = desc;
+            description = "Single-file linear algebra math library for C++23.";
             homepage = "https://github.com/slendidev/smath";
             license = licenses.asl20;
             platforms = platforms.all;
