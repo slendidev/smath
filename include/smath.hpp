@@ -577,42 +577,47 @@ using Vec2d = Vec<2, double>;
 using Vec3d = Vec<3, double>;
 using Vec4d = Vec<4, double>;
 
-template<class T> constexpr auto deg(T const value) -> T
+template<class T> constexpr auto deg(T const value)
 {
+	using R = std::common_type_t<T, double>;
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
-		return value;
+		return static_cast<R>(value);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
-		return value * static_cast<T>(std::numbers::pi / 180.0);
+		return static_cast<R>(value) * static_cast<R>(std::numbers::pi / 180.0);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Turns) {
-		return value / static_cast<T>(360.0);
+		return static_cast<R>(value) / static_cast<R>(360.0);
 	}
 }
 
-template<class T> constexpr auto rad(T const value) -> T
+template<class T> constexpr auto rad(T const value)
 {
+	using R = std::common_type_t<T, double>;
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
-		return value * static_cast<T>(180.0 / std::numbers::pi);
+		return static_cast<R>(value) * static_cast<R>(180.0 / std::numbers::pi);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
-		return value;
+		return static_cast<R>(value);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Turns) {
-		return value / (static_cast<T>(2.0) * static_cast<T>(std::numbers::pi));
+		return static_cast<R>(value)
+		    / (static_cast<R>(2.0) * static_cast<R>(std::numbers::pi));
 	}
 }
 
-template<class T> constexpr auto turns(T const value) -> T
+template<class T> constexpr auto turns(T const value)
 {
+	using R = std::common_type_t<T, double>;
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
-		return value * static_cast<T>(360.0);
+		return static_cast<R>(value) * static_cast<R>(360.0);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
-		return value * (static_cast<T>(2.0) * static_cast<T>(std::numbers::pi));
+		return static_cast<R>(value)
+		    * (static_cast<R>(2.0) * static_cast<R>(std::numbers::pi));
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Turns) {
-		return value;
+		return static_cast<R>(value);
 	}
 }
 
