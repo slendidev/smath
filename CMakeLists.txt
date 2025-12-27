@@ -4,8 +4,14 @@ project(SmathExamples LANGUAGES CXX VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(BUILD_EXAMPLES "Build example programs" ON)
-option(BUILD_TESTS "Build unit tests" ON)
+option(SMATH_BUILD_EXAMPLES "Build example programs" ON)
+option(SMATH_BUILD_TESTS "Build unit tests" ON)
+option(SMATH_BUILD_MODULES "Enable C++20 modules support" OFF)
+
+if(SMATH_BUILD_MODULES)
+	message(STATUS "Building smath C++ module")
+	add_subdirectory(src/modules)
+endif()
 
 add_library(smath INTERFACE)
 target_include_directories(smath
@@ -55,7 +61,7 @@ install(FILES
 	DESTINATION lib/cmake/smath
 )
 
-if(BUILD_EXAMPLES)
+if(SMATH_BUILD_EXAMPLES)
 	file(GLOB EXAMPLE_SOURCES "${CMAKE_SOURCE_DIR}/examples/*.cpp")
 	foreach(EXAMPLE_FILE ${EXAMPLE_SOURCES})
 		get_filename_component(EXAMPLE_NAME ${EXAMPLE_FILE} NAME_WE)
@@ -64,7 +70,7 @@ if(BUILD_EXAMPLES)
 	endforeach()
 endif()
 
-if(BUILD_TESTS)
+if(SMATH_BUILD_TESTS)
 	enable_testing()
 
 	find_package(GTest QUIET)
