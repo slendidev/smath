@@ -630,9 +630,13 @@ template<class T> struct Quaternion : Vec<4, T> {
 	constexpr Base const &vec() const noexcept { return *this; }
 
 	constexpr T &x() noexcept { return Base::x(); }
+	constexpr T const &x() const noexcept { return Base::x(); }
 	constexpr T &y() noexcept { return Base::y(); }
+	constexpr T const &y() const noexcept { return Base::y(); }
 	constexpr T &z() noexcept { return Base::z(); }
+	constexpr T const &z() const noexcept { return Base::z(); }
 	constexpr T &w() noexcept { return Base::w(); }
+	constexpr T const &w() const noexcept { return Base::w(); }
 
 	constexpr auto operator*(Quaternion const &rhs) const noexcept -> Quaternion
 	{
