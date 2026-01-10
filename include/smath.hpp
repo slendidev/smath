@@ -188,9 +188,12 @@ public:
 	// NOTE: This can (probably) be improved with C++26 reflection in the
 	// future.
 #define VEC_ACC(component, req, idx) \
-	constexpr auto component() noexcept -> T &requires(N >= req) { \
+	constexpr auto component() noexcept -> T & \
+	requires(N >= req) \
+	{ \
 		return (*this)[idx]; \
-	} constexpr auto component() const->T const & \
+	} \
+	constexpr auto component() const -> T const & \
 	requires(N >= req) \
 	{ \
 		return (*this)[idx]; \
@@ -281,13 +284,13 @@ public:
 	VEC_OP(/)
 #undef VEC_OP
 #define VEC_OP_ASSIGN(sym) \
-	constexpr Vec &operator sym##=(Vec const &rhs) noexcept \
+	constexpr Vec &operator sym## = (Vec const &rhs) noexcept \
 	{ \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = rhs[i]; \
 		return *this; \
 	} \
-	constexpr Vec &operator sym##=(T const &s) noexcept \
+	constexpr Vec &operator sym## = (T const &s) noexcept \
 	{ \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = s; \
@@ -421,8 +424,9 @@ public:
 	}
 
 	template<class U>
-	requires(std::is_arithmetic_v<U> && N >= 1) constexpr explicit(
-	    !std::is_convertible_v<T, U>) operator Vec<N, U>() const noexcept
+	requires(std::is_arithmetic_v<U> && N >= 1)
+	constexpr explicit(!std::is_convertible_v<T, U>)
+	operator Vec<N, U>() const noexcept
 	{
 		Vec<N, U> r {};
 		for (std::size_t i = 0; i < N; ++i)
@@ -446,9 +450,8 @@ private:
 	}
 #ifdef SMATH_IMPLICIT_CONVERSIONS
 	template<class U>
-	requires std::is_arithmetic_v<U>
-	    && (!std::is_same_v<U, T>)constexpr void fill_one(
-	    std::size_t &i, const U &v) noexcept
+	requires std::is_arithmetic_v<U> && (!std::is_same_v<U, T>)constexpr void
+	fill_one(std::size_t &i, const U &v) noexcept
 	{
 		(*this)[i++] = static_cast<T>(v);
 	}
@@ -1115,9 +1118,9 @@ template<typename T>
 	auto u = s.cross(f);
 
 	return Mat<4, 4, T> {
-		Vec<4, T> { s.x(), s.y(), s.z(), 0 },
-		Vec<4, T> { u.x(), u.y(), u.z(), 0 },
-		Vec<4, T> { -f.x(), -f.y(), -f.z(), 0 },
+		Vec<4, T> { s.x(), u.x(), -f.x(), 0 },
+		Vec<4, T> { s.y(), u.y(), -f.y(), 0 },
+		Vec<4, T> { s.z(), u.z(), -f.z(), 0 },
 		Vec<4, T> { -s.dot(eye), -u.dot(eye), f.dot(eye), 1 },
 	};
 }
