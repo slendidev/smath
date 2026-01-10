@@ -577,46 +577,49 @@ using Vec2d = Vec<2, double>;
 using Vec3d = Vec<3, double>;
 using Vec4d = Vec<4, double>;
 
-template<class T> constexpr auto deg(T const value)
+template<class T>
+using angle_ret_t = std::conditional_t<std::is_same_v<T, float>, float, double>;
+
+template<class T> constexpr auto deg(T value)
 {
-	using R = std::common_type_t<T, double>;
+	using R = angle_ret_t<T>;
+
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
 		return static_cast<R>(value);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
 		return static_cast<R>(value) * static_cast<R>(std::numbers::pi / 180.0);
-	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
-	    == detail::AngularUnit::Turns) {
+	} else {
 		return static_cast<R>(value) / static_cast<R>(360.0);
 	}
 }
 
-template<class T> constexpr auto rad(T const value)
+template<class T> constexpr auto rad(T value)
 {
-	using R = std::common_type_t<T, double>;
+	using R = angle_ret_t<T>;
+
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
 		return static_cast<R>(value) * static_cast<R>(180.0 / std::numbers::pi);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
 		return static_cast<R>(value);
-	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
-	    == detail::AngularUnit::Turns) {
+	} else {
 		return static_cast<R>(value)
 		    / (static_cast<R>(2.0) * static_cast<R>(std::numbers::pi));
 	}
 }
 
-template<class T> constexpr auto turns(T const value)
+template<class T> constexpr auto turns(T value)
 {
-	using R = std::common_type_t<T, double>;
+	using R = angle_ret_t<T>;
+
 	if constexpr (detail::SMATH_ANGLE_UNIT_ID == detail::AngularUnit::Degrees) {
 		return static_cast<R>(value) * static_cast<R>(360.0);
 	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
 	    == detail::AngularUnit::Radians) {
 		return static_cast<R>(value)
 		    * (static_cast<R>(2.0) * static_cast<R>(std::numbers::pi));
-	} else if constexpr (detail::SMATH_ANGLE_UNIT_ID
-	    == detail::AngularUnit::Turns) {
+	} else {
 		return static_cast<R>(value);
 	}
 }
@@ -1105,28 +1108,18 @@ inline auto matrix_perspective(
 
 template<typename T>
 [[nodiscard]] inline auto matrix_look_at(Vec<3, T> const eye,
-    Vec<3, T> const center, Vec<3, T> const up, bool flip_z_axis = false)
-    -> Mat<4, 4, T>
+    Vec<3, T> const center, Vec<3, T> const up) -> Mat<4, 4, T>
 {
-	auto f = (center - eye).normalized();
-	auto s = f.cross(up).normalized();
+	auto f = (center - eye).normalized_safe();
+	auto s = f.cross(up).normalized_safe();
 	auto u = s.cross(f);
 
-	if (!flip_z_axis) {
-		return Mat<4, 4, T> {
-			Vec<4, T> { s.x(), s.y(), s.z(), 0 },
-			Vec<4, T> { u.x(), u.y(), u.z(), 0 },
-			Vec<4, T> { -f.x(), -f.y(), -f.z(), 0 },
-			Vec<4, T> { -s.dot(eye), -u.dot(eye), f.dot(eye), 1 },
-		};
-	} else {
-		return Mat<4, 4, T> {
-			Vec<4, T> { s.x(), s.y(), s.z(), 0 },
-			Vec<4, T> { u.x(), u.y(), u.z(), 0 },
-			Vec<4, T> { f.x(), f.y(), f.z(), 0 },
-			Vec<4, T> { -s.dot(eye), -u.dot(eye), -f.dot(eye), 1 },
-		};
-	}
+	return Mat<4, 4, T> {
+		Vec<4, T> { s.x(), s.y(), s.z(), 0 },
+		Vec<4, T> { u.x(), u.y(), u.z(), 0 },
+		Vec<4, T> { -f.x(), -f.y(), -f.z(), 0 },
+		Vec<4, T> { -s.dot(eye), -u.dot(eye), f.dot(eye), 1 },
+	};
 }
 
 template<typename T>
