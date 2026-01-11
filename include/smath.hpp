@@ -626,6 +626,8 @@ template<class T> constexpr auto turns(T value)
 		return static_cast<R>(value);
 	}
 }
+template<std::size_t R, std::size_t C, typename T>
+requires std::is_arithmetic_v<T> struct Mat;
 
 template<class T> struct Quaternion : Vec<4, T> {
 	using Base = Vec<4, T>;
@@ -659,6 +661,42 @@ template<class T> struct Quaternion : Vec<4, T> {
 		    - a.z() * rhs.z();
 
 		return r;
+	}
+
+	[[nodiscard]] constexpr auto as_matrix() const noexcept -> Mat<4, 4, T>
+	{
+		auto const xx = x() * x();
+		auto const yy = y() * y();
+		auto const zz = z() * z();
+		auto const xy = x() * y();
+		auto const xz = x() * z();
+		auto const yz = y() * z();
+		auto const wx = w() * x();
+		auto const wy = w() * y();
+		auto const wz = w() * z();
+
+		return Mat<4, 4, T> {
+			Vec<4, T> { 1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0 },
+			Vec<4, T> { 2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0 },
+			Vec<4, T> { 2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0 },
+			Vec<4, T> { 0, 0, 0, 1 },
+		};
+	}
+
+	[[nodiscard]] static constexpr auto from_axis_angle(
+	    Vec<3, T> const &axis, T const angle) noexcept -> Quaternion
+	{
+		auto const normalized_axis { axis.normalized_safe() };
+		auto const half_angle { angle / static_cast<T>(2) };
+		auto const sine { std::sin(half_angle) };
+		auto const cosine { std::cos(half_angle) };
+
+		return Quaternion {
+			normalized_axis.x() * sine,
+			normalized_axis.y() * sine,
+			normalized_axis.z() * sine,
+			cosine,
+		};
 	}
 };
 
