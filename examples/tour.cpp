@@ -19,51 +19,52 @@
 
 #include <smath.hpp>
 
-int main() {
-  using namespace smath;
-  Vec3 v{1, 2, 3};
-  std::println("v: {}", v);
-  auto v2 = swizzle<"zyx">(v);
-  std::println("v2: {}", v2);
-  std::println("+: {}", v + v2);
-  std::println("-: {}", v - v2);
-  std::println("*: {}", v * v2);
-  std::println("/: {}", v / v2);
-  std::println("dot: {}", v.dot(v2));
-  std::println("rrggbb: {}", swizzle<"rrggbb">(v));
-  std::println("Magnitude: {}", v.magnitude());
-  std::println("Normalized: {}", v.normalized());
-  std::println("(alias) Unit: {}", v.unit());
-  std::println("(alias) Normalize: {}", v.normalize());
-  std::println("(alias) Length: {}", v.length());
-  std::println("std::get<1>(v): {}", std::get<1>(v));
-  auto [x, y, z] = v;
-  std::println("Bindings: [{}, {}, {}]", x, y, z);
-  float x1{}, y1{}, z1{};
-  v.unpack(x1, y1, z1);
-  std::println("Unpacked: {}, {}, {}", x1, y1, z1);
+int main()
+{
+	using namespace smath;
+	Vec3 v { 1, 2, 3 };
+	std::println("v: {}", v);
+	auto v2 = swizzle<"zyx">(v);
+	std::println("v2: {}", v2);
+	std::println("+: {}", v + v2);
+	std::println("-: {}", v - v2);
+	std::println("*: {}", v * v2);
+	std::println("/: {}", v / v2);
+	std::println("dot: {}", v.dot(v2));
+	std::println("rrggbb: {}", swizzle<"rrggbb">(v));
+	std::println("Magnitude: {}", v.magnitude());
+	std::println("Normalized: {}", v.normalized());
+	std::println("(alias) Unit: {}", v.unit());
+	std::println("(alias) Normalize: {}", v.normalize());
+	std::println("(alias) Length: {}", v.length());
+	std::println("std::get<1>(v): {}", std::get<1>(v));
+	auto [x, y, z] = v;
+	std::println("Bindings: [{}, {}, {}]", x, y, z);
+	float x1 {}, y1 {}, z1 {};
+	v.unpack(x1, y1, z1);
+	std::println("Unpacked: {}, {}, {}", x1, y1, z1);
 
-  // Let's mix and match!
-  Vec<6> v3(v, 7, swizzle<"zy">(v2));
-  std::println("{{v, 7, XZ(v2)}}: {}", v3);
+	// Let's mix and match!
+	Vec<6> v3(v, 7, swizzle<"zy">(v2));
+	std::println("{{v, 7, XZ(v2)}}: {}", v3);
 
-  // Scalar operations
-  std::println("v + 3: {}", v + 3);
-  std::println("v - 3: {}", v - 3);
-  std::println("v * 3: {}", v * 3);
-  std::println("v / 3: {}", v / 3);
+	// Scalar operations
+	std::println("v + 3: {}", v + 3);
+	std::println("v - 3: {}", v - 3);
+	std::println("v * 3: {}", v * 3);
+	std::println("v / 3: {}", v / 3);
 
-  std::println("3 + v: {}", 3 + v);
-  std::println("3 - v: {}", 3 - v);
-  std::println("3 * v: {}", 3 * v);
-  std::println("3 / v: {}", 3 / v);
+	std::println("3 + v: {}", 3 + v);
+	std::println("3 - v: {}", 3 - v);
+	std::println("3 * v: {}", 3 * v);
+	std::println("3 / v: {}", 3 / v);
 
-  // Casting
-  auto v4 = static_cast<Vec3d>(v);
+	// Casting
+	auto v4 = static_cast<Vec3d>(v);
 #ifdef SMATH_IMPLICIT_CONVERSIONS
-  Vec3d v5 = v;
+	Vec3d v5 = v;
 #else
-  Vec3d v5 = static_cast<Vec3d>(v);
+	Vec3d v5 = static_cast<Vec3d>(v);
 #endif // SMATH_IMPLICIT_CONVERSIONS
-  std::println("Are v4 and v5 same? {}", v4 == v5);
+	std::println("Are v4 and v5 same? {}", v4 == v5);
 }

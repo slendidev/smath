@@ -24,20 +24,21 @@
 
 #include <smath.hpp>
 
-auto main() -> int {
-  using namespace smath;
+auto main() -> int
+{
+	using namespace smath;
 
-  Vec2d point;
-  std::random_device rd;
-  std::mt19937 rng{rd()};
-  std::uniform_real_distribution<> dis(-5, 5);
-  int i = 0;
-  do {
-    Vec2d add{dis(rng), dis(rng)};
-    auto const n = point + add;
-    std::println("{}: {:.2f} + {:.2f} -> {:.2f}", i, point, add, n);
-    point = n;
+	Vec2d point;
+	std::random_device rd;
+	std::mt19937 rng { rd() };
+	std::uniform_real_distribution<> dis(-5, 5);
+	int i = 0;
+	do {
+		Vec2d add { dis(rng), dis(rng) };
+		auto const n = point + add;
+		std::println("{}: {:.2f} + {:.2f} -> {:.2f}", i, point, add, n);
+		point = n;
 
-    i++;
-  } while (i < 15);
+		i++;
+	} while (i < 15);
 }

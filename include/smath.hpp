@@ -32,20 +32,23 @@
 #include <type_traits>
 
 #ifndef SMATH_ANGLE_UNIT
-#	define SMATH_ANGLE_UNIT rad
+#define SMATH_ANGLE_UNIT rad
 #endif // SMATH_ANGLE_UNIT
 
-namespace smath {
+namespace smath
+{
 
 template<std::size_t N, typename T>
-requires std::is_arithmetic_v<T> struct Vec;
+requires std::is_arithmetic_v<T>
+struct Vec;
 
-namespace detail {
+namespace detail
+{
 
 #define SMATH_STR(x) #x
 #define SMATH_XSTR(x) SMATH_STR(x)
 
-consteval bool streq(const char *a, const char *b)
+consteval auto streq(const char *a, const char *b) -> bool
 {
 	for (;; ++a, ++b) {
 		if (*a != *b)
@@ -55,13 +58,14 @@ consteval bool streq(const char *a, const char *b)
 	}
 }
 
-enum class AngularUnit {
+enum class AngularUnit
+{
 	Radians,
 	Degrees,
 	Turns,
 };
 
-consteval std::optional<AngularUnit> parse_unit(char const *s)
+consteval auto parse_unit(char const *s) -> std::optional<AngularUnit>
 {
 	if (streq(s, "rad"))
 		return AngularUnit::Radians;
@@ -76,7 +80,8 @@ constexpr auto SMATH_ANGLE_UNIT_ID = parse_unit(SMATH_XSTR(SMATH_ANGLE_UNIT));
 static_assert(SMATH_ANGLE_UNIT_ID != std::nullopt,
     "Invalid SMATH_ANGLE_UNIT. Should be rad, deg, or turns.");
 
-template<std::size_t N> struct FixedString {
+template<std::size_t N> struct FixedString
+{
 	char data[N] {};
 	static constexpr std::size_t size = N - 1;
 	constexpr FixedString(char const (&s)[N])
@@ -86,8 +91,10 @@ template<std::size_t N> struct FixedString {
 	}
 	constexpr char operator[](std::size_t i) const { return data[i]; }
 };
-template<class X> struct is_Vec : std::false_type { };
-template<std::size_t M, class U> struct is_Vec<Vec<M, U>> : std::true_type { };
+template<class X> struct is_Vec : std::false_type
+{ };
+template<std::size_t M, class U> struct is_Vec<Vec<M, U>> : std::true_type
+{ };
 template<class X>
 inline constexpr bool is_Vec_v = is_Vec<std::remove_cvref_t<X>>::value;
 template<class X>
@@ -95,7 +102,8 @@ inline constexpr bool is_scalar_v
     = std::is_arithmetic_v<std::remove_cvref_t<X>>;
 template<class X> struct Vec_size;
 template<std::size_t M, class U>
-struct Vec_size<Vec<M, U>> : std::integral_constant<std::size_t, M> { };
+struct Vec_size<Vec<M, U>> : std::integral_constant<std::size_t, M>
+{ };
 
 template<class T> constexpr auto pack_unorm8(T v) -> std::uint8_t
 {
@@ -144,9 +152,11 @@ template<class T> constexpr auto unpack_snorm8(std::int8_t b) -> T
 } // namespace detail
 
 template<std::size_t N, typename T = float>
-requires std::is_arithmetic_v<T> struct Vec : std::array<T, N> {
+requires std::is_arithmetic_v<T>
+struct Vec : std::array<T, N>
+{
 private:
-	template<class X> static consteval std::size_t extent()
+	template<class X> static consteval auto extent() -> std::size_t
 	{
 		if constexpr (detail::is_Vec_v<X>)
 			return detail::Vec_size<std::remove_cvref_t<X>>::value;
@@ -155,7 +165,7 @@ private:
 		else
 			return 0; // Should be unreachable
 	}
-	template<class... Args> static consteval std::size_t total_extent()
+	template<class... Args> static consteval auto total_extent() -> std::size_t
 	{
 		return (extent<Args>() + ... + 0);
 	}
@@ -188,12 +198,9 @@ public:
 	// NOTE: This can (probably) be improved with C++26 reflection in the
 	// future.
 #define VEC_ACC(component, req, idx) \
-	constexpr auto component() noexcept -> T & \
-	requires(N >= req) \
-	{ \
+	constexpr auto component() noexcept -> T &requires(N >= req) { \
 		return (*this)[idx]; \
-	} \
-	constexpr auto component() const -> T const & \
+	} constexpr auto component() const->T const & \
 	requires(N >= req) \
 	{ \
 		return (*this)[idx]; \
@@ -225,7 +232,8 @@ public:
 		((args = (*this)[Is]), ...);
 	}
 
-	template<class... Args> constexpr void unpack(Args &...args) noexcept
+	template<class... Args>
+	constexpr auto unpack(Args &...args) noexcept -> void
 	{
 		unpack_impl(std::index_sequence_for<Args...> {}, args...);
 	}
@@ -284,13 +292,13 @@ public:
 	VEC_OP(/)
 #undef VEC_OP
 #define VEC_OP_ASSIGN(sym) \
-	constexpr Vec &operator sym## = (Vec const &rhs) noexcept \
+	constexpr Vec &operator sym##=(Vec const &rhs) noexcept \
 	{ \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = rhs[i]; \
 		return *this; \
 	} \
-	constexpr Vec &operator sym## = (T const &s) noexcept \
+	constexpr Vec &operator sym##=(T const &s) noexcept \
 	{ \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = s; \
@@ -393,11 +401,14 @@ public:
 	}
 
 	template<typename U = T>
-	requires(N == 3) constexpr auto cross(Vec const &r) const noexcept -> Vec
+	requires(N == 3)
+	constexpr auto cross(Vec const &r) const noexcept -> Vec
 	{
-		return { (*this)[1] * r[2] - (*this)[2] * r[1],
+		return {
+			(*this)[1] * r[2] - (*this)[2] * r[1],
 			(*this)[2] * r[0] - (*this)[0] * r[2],
-			(*this)[0] * r[1] - (*this)[1] * r[0] };
+			(*this)[0] * r[1] - (*this)[1] * r[0],
+		};
 	}
 
 	constexpr auto distance(Vec const &r) const noexcept -> T
@@ -425,8 +436,8 @@ public:
 
 	template<class U>
 	requires(std::is_arithmetic_v<U> && N >= 1)
-	constexpr explicit(!std::is_convertible_v<T, U>)
-	operator Vec<N, U>() const noexcept
+	constexpr explicit(
+	    !std::is_convertible_v<T, U>) operator Vec<N, U>() const noexcept
 	{
 		Vec<N, U> r {};
 		for (std::size_t i = 0; i < N; ++i)
@@ -444,26 +455,26 @@ public:
 	}
 
 private:
-	constexpr void fill_one(std::size_t &i, T const &v) noexcept
+	constexpr auto fill_one(std::size_t &i, T const &v) noexcept -> void
 	{
 		(*this)[i++] = v;
 	}
 #ifdef SMATH_IMPLICIT_CONVERSIONS
 	template<class U>
-	requires std::is_arithmetic_v<U> && (!std::is_same_v<U, T>)constexpr void
-	fill_one(std::size_t &i, const U &v) noexcept
+	requires std::is_arithmetic_v<U> && (!std::is_same_v<U, T>)
+	constexpr auto fill_one(std::size_t &i, const U &v) noexcept -> void
 	{
 		(*this)[i++] = static_cast<T>(v);
 	}
 	template<std::size_t M, class U>
-	constexpr void fill_one(std::size_t &i, Vec<M, U> const &v) noexcept
+	constexpr auto fill_one(std::size_t &i, Vec<M, U> const &v) noexcept -> void
 	{
 		for (std::size_t k = 0; k < M; ++k)
 			(*this)[i++] = static_cast<T>(v[k]);
 	}
 #endif // SMATH_IMPLICIT_CONVERSIONS
 	template<std::size_t M>
-	constexpr void fill_one(std::size_t &i, const Vec<M, T> &v) noexcept
+	constexpr auto fill_one(std::size_t &i, const Vec<M, T> &v) noexcept -> void
 	{
 		for (std::size_t k = 0; k < M; ++k)
 			(*this)[i++] = static_cast<T>(v[k]);
@@ -497,7 +508,8 @@ template<std::size_t N, typename T = float>
 requires std::is_arithmetic_v<T>
 using VecOrScalar = std::conditional_t<N == 1, T, Vec<N, T>>;
 
-namespace detail {
+namespace detail
+{
 
 consteval auto char_to_idx(char c) -> std::size_t
 {
@@ -627,9 +639,11 @@ template<class T> constexpr auto turns(T value)
 	}
 }
 template<std::size_t R, std::size_t C, typename T>
-requires std::is_arithmetic_v<T> struct Mat;
+requires std::is_arithmetic_v<T>
+struct Mat;
 
-template<class T> struct Quaternion : Vec<4, T> {
+template<class T> struct Quaternion : Vec<4, T>
+{
 	using Base = Vec<4, T>;
 	using Base::Base;
 	using Base::operator=;
@@ -759,7 +773,9 @@ requires std::is_floating_point_v<T>
 }
 
 template<std::size_t R, std::size_t C, typename T = float>
-requires std::is_arithmetic_v<T> struct Mat : std::array<Vec<R, T>, C> {
+requires std::is_arithmetic_v<T>
+struct Mat : std::array<Vec<R, T>, C>
+{
 	using Base = std::array<Vec<R, T>, C>;
 	using Base::operator[];
 
@@ -792,10 +808,8 @@ requires std::is_arithmetic_v<T> struct Mat : std::array<Vec<R, T>, C> {
 	template<typename... Cols>
 	requires(sizeof...(Cols) == C
 	    && (std::same_as<std::remove_cvref_t<Cols>, Vec<R, T>> && ...))
-	constexpr Mat(Cols const &...cols) noexcept
-	    : Base { cols... }
-	{
-	}
+	constexpr Mat(Cols const &...cols) noexcept : Base { cols... }
+	{ }
 
 	constexpr auto col(std::size_t j) noexcept -> Vec<R, T> &
 	{
@@ -1100,8 +1114,12 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline auto matrix_ortho3d(T const left, T const right,
-    T const bottom, T const top, T const near, T const far,
+[[nodiscard]] inline auto matrix_ortho3d(T const left,
+    T const right,
+    T const bottom,
+    T const top,
+    T const near,
+    T const far,
     bool const flip_z_axis = true) -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res {};
@@ -1148,8 +1166,9 @@ inline auto matrix_perspective(
 }
 
 template<typename T>
-[[nodiscard]] inline auto matrix_look_at(Vec<3, T> const eye,
-    Vec<3, T> const center, Vec<3, T> const up) -> Mat<4, 4, T>
+[[nodiscard]] inline auto matrix_look_at(
+    Vec<3, T> const eye, Vec<3, T> const center, Vec<3, T> const up)
+    -> Mat<4, 4, T>
 {
 	auto f = (center - eye).normalized_safe();
 	auto s = f.cross(up).normalized_safe();
@@ -1164,8 +1183,9 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline auto matrix_infinite_perspective(T const fovy,
-    T const aspect, T const znear, bool flip_z_axis = false) -> Mat<4, 4, T>
+[[nodiscard]] inline auto matrix_infinite_perspective(
+    T const fovy, T const aspect, T const znear, bool flip_z_axis = false)
+    -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> m {};
 
@@ -1186,12 +1206,11 @@ template<typename T>
 	return m;
 }
 
-
 template<class Ext> struct interop_adapter;
 
 template<class Ext>
-constexpr auto from_external(Ext const &ext)
-    -> typename interop_adapter<Ext>::smath_type
+constexpr auto from_external(Ext const &ext) ->
+    typename interop_adapter<Ext>::smath_type
 {
 	return interop_adapter<Ext>::to_smath(ext);
 }
@@ -1202,12 +1221,12 @@ constexpr auto to_external(SMathT const &value) -> Ext
 	return interop_adapter<Ext>::from_smath(value);
 }
 
-
 } // namespace smath
 
 template<std::size_t N, typename T>
 requires std::formattable<T, char>
-struct std::formatter<smath::Vec<N, T>> : std::formatter<T> {
+struct std::formatter<smath::Vec<N, T>> : std::formatter<T>
+{
 	constexpr auto parse(std::format_parse_context &ctx)
 	{
 		return std::formatter<T>::parse(ctx);
@@ -1230,12 +1249,14 @@ struct std::formatter<smath::Vec<N, T>> : std::formatter<T> {
 	}
 };
 
-namespace std {
+namespace std
+{
 template<size_t N, class T>
-struct tuple_size<smath::Vec<N, T>> : std::integral_constant<size_t, N> { };
+struct tuple_size<smath::Vec<N, T>> : std::integral_constant<size_t, N>
+{ };
 
-template<size_t I, size_t N, class T>
-struct tuple_element<I, smath::Vec<N, T>> {
+template<size_t I, size_t N, class T> struct tuple_element<I, smath::Vec<N, T>>
+{
 	static_assert(I < N);
 	using type = T;
 };

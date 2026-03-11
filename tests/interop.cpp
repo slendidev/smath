@@ -4,22 +4,26 @@
 
 #include <smath.hpp>
 
-struct ExternalVec3f {
+struct ExternalVec3f
+{
 	float x;
 	float y;
 	float z;
 };
 
-struct ExternalMat2f {
+struct ExternalMat2f
+{
 	float m00;
 	float m01;
 	float m10;
 	float m11;
 };
 
-namespace smath {
+namespace smath
+{
 
-template<> struct interop_adapter<ExternalVec3f> {
+template<> struct interop_adapter<ExternalVec3f>
+{
 	using smath_type = Vec<3, float>;
 
 	static constexpr auto to_smath(ExternalVec3f const &v) -> smath_type
@@ -33,7 +37,8 @@ template<> struct interop_adapter<ExternalVec3f> {
 	}
 };
 
-template<> struct interop_adapter<ExternalMat2f> {
+template<> struct interop_adapter<ExternalMat2f>
+{
 	using smath_type = Mat<2, 2, float>;
 
 	static constexpr auto to_smath(ExternalMat2f const &m) -> smath_type
@@ -54,7 +59,8 @@ template<> struct interop_adapter<ExternalMat2f> {
 
 } // namespace smath
 
-TEST(Interop, FromExternalVec) {
+TEST(Interop, FromExternalVec)
+{
 	ExternalVec3f ext { 1.0f, 2.0f, 3.0f };
 	auto v = smath::from_external(ext);
 
@@ -64,7 +70,8 @@ TEST(Interop, FromExternalVec) {
 	EXPECT_EQ(v[2], 3.0f);
 }
 
-TEST(Interop, ToExternalVec) {
+TEST(Interop, ToExternalVec)
+{
 	smath::Vec3 v { 4.0f, 5.0f, 6.0f };
 	auto ext = smath::to_external<ExternalVec3f>(v);
 
@@ -73,7 +80,8 @@ TEST(Interop, ToExternalVec) {
 	EXPECT_EQ(ext.z, 6.0f);
 }
 
-TEST(Interop, RoundtripVec) {
+TEST(Interop, RoundtripVec)
+{
 	ExternalVec3f ext { 7.0f, 8.0f, 9.0f };
 	auto v = smath::from_external(ext);
 	auto ext2 = smath::to_external<ExternalVec3f>(v);
@@ -83,7 +91,8 @@ TEST(Interop, RoundtripVec) {
 	EXPECT_EQ(ext2.z, 9.0f);
 }
 
-TEST(Interop, MatrixConversion) {
+TEST(Interop, MatrixConversion)
+{
 	ExternalMat2f ext { 1.0f, 2.0f, 3.0f, 4.0f };
 	auto m = smath::from_external(ext);
 
