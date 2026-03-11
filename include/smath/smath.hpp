@@ -17,6 +17,7 @@
  *
  * You can define the following macros to change functionality:
  * - SMATH_IMPLICIT_CONVERSIONS
+ * - SMATH_ANGLE_UNIT (=rad, =deg, =turns)
  */
 
 #pragma once
