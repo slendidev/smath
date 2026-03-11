@@ -1,10 +1,16 @@
-# smath
-
-Single-file, header-only linear algebra math library for C++23.
-
-[![Build](https://github.com/slendidev/smath/actions/workflows/build.yml/badge.svg)](https://github.com/slendidev/smath/actions/workflows/build.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt)
-[![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C.svg)](https://en.cppreference.com/w/cpp/23)
+<p align="center">
+  <img alt="smath logo" src="https://github.com/user-attachments/assets/d6f2ef4b-eca0-4004-9099-37423528bcba" />
+<br><br>
+  <a href="https://github.com/slendidev/smath/actions/workflows/build.yml">
+		<img src="https://github.com/slendidev/smath/actions/workflows/build.yml/badge.svg" alt="Build">
+	</a>
+	<a href="LICENSE.txt">
+		<img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License: Apache-2.0">
+	</a>
+	<a href="https://en.cppreference.com/w/cpp/23">
+		<img src="https://img.shields.io/badge/C%2B%2B-23-00599C.svg" alt="C++23">
+	</a>
+</p>
 
 ## Quick Start
 
