@@ -2,6 +2,37 @@
 
 Single-file, header-only linear algebra math library for C++23.
 
+[![Build](https://github.com/slendidev/smath/actions/workflows/build.yml/badge.svg)](https://github.com/slendidev/smath/actions/workflows/build.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.txt)
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C.svg)](https://en.cppreference.com/w/cpp/23)
+
+## Quick Start
+
+Create `main.cpp`:
+
+```cpp
+#include <print>
+#include <smath.hpp>
+
+int main() {
+  using namespace smath;
+
+  Vec3 a{1.0f, 2.0f, 3.0f};
+  Vec3 b{3.0f, 2.0f, 1.0f};
+
+  std::println("a + b = {}", a + b);
+  std::println("dot(a, b) = {}", a.dot(b));
+  std::println("normalized(a) = {}", a.normalized());
+}
+```
+
+Build and run:
+
+```bash
+g++ -std=c++23 -Iinclude main.cpp -o quickstart
+./quickstart
+```
+
 ## Features
 
 - Generic `Vec<N, T>` class with useful aliases `Vec2/Vec3/Vec4` and friendly accessors (`x/y/z/w`, `r/g/b/a`). They support approx-equal and tuple/structured bindings.
@@ -12,8 +43,8 @@ Single-file, header-only linear algebra math library for C++23.
 - Angle helpers `rad/deg/turns` respecting a configurable base unit via the macro `SMATH_ANGLE_UNIT`.
 - Optional implicit conversions.
 - Packing utilities for normalized RGBA (`pack_unorm4x8`, `unpack_snorm4x8`, etc.).
+- C++20 modules support.
 
 ## License
 
-This library is licensed under the Apache License 2.0. See the (LICENSE.txt)[LICENSE.txt] file for more details.
-
+This library is licensed under the Apache License 2.0. See the [LICENSE.txt](LICENSE.txt) file for more details.
