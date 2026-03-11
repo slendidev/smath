@@ -21,7 +21,7 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Building default package
-        run: nix build .#default
+        run: nix build .#default --print-build-logs
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
