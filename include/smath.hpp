@@ -1186,6 +1186,23 @@ template<typename T>
 	return m;
 }
 
+
+template<class Ext> struct interop_adapter;
+
+template<class Ext>
+constexpr auto from_external(Ext const &ext)
+    -> typename interop_adapter<Ext>::smath_type
+{
+	return interop_adapter<Ext>::to_smath(ext);
+}
+
+template<class Ext, class SMathT>
+constexpr auto to_external(SMathT const &value) -> Ext
+{
+	return interop_adapter<Ext>::from_smath(value);
+}
+
+
 } // namespace smath
 
 template<std::size_t N, typename T>
