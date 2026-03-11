@@ -17,7 +17,7 @@
 
 // #define SMATH_IMPLICIT_CONVERSIONS
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 int main()
 {

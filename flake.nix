@@ -57,8 +57,8 @@
 
           installPhase = ''
             runHook preInstall
-            mkdir -p $out/include
-            cp ../include/smath.hpp $out/include/
+            mkdir -p $out/include/smath
+            cp ../include/smath/smath.hpp $out/include/smath/
             runHook postInstall
           '';
 

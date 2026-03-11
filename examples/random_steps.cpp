@@ -22,7 +22,7 @@
 #include <print>
 #include <random>
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 auto main() -> int
 {

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 TEST(AngleReturnRadians, DegInput)
 {

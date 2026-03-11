@@ -1,6 +1,6 @@
 module;
 
-#include "smath.hpp"
+#include "smath/smath.hpp"
 
 export module smath;
 

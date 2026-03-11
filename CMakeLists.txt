@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(SMATH_BUILD_EXAMPLES "Build example programs" ON)
 option(SMATH_BUILD_TESTS "Build unit tests" ON)
 option(SMATH_BUILD_MODULES "Enable C++20 modules support" OFF)
+option(SMATH_ENABLE_LEGACY_HEADER "Install legacy include <smath.hpp> shim" OFF)
 
 if(SMATH_BUILD_MODULES)
 	message(STATUS "Building smath C++ module")
@@ -17,6 +18,7 @@ add_library(smath INTERFACE)
 target_include_directories(smath
 	INTERFACE
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<$<BOOL:${SMATH_ENABLE_LEGACY_HEADER}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>>
 		$<INSTALL_INTERFACE:include>
 )
 add_library(smath::smath ALIAS smath)
@@ -26,6 +28,16 @@ install(TARGETS smath
 	EXPORT smathTargets
 )
 install(DIRECTORY include/ DESTINATION include)
+
+if(SMATH_ENABLE_LEGACY_HEADER)
+	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
+	configure_file(
+		"${CMAKE_CURRENT_SOURCE_DIR}/cmake/smath_legacy_header.hpp.in"
+		"${CMAKE_CURRENT_BINARY_DIR}/include/smath.hpp"
+		@ONLY
+	)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/smath.hpp" DESTINATION include)
+endif()
 
 install(EXPORT smathTargets
 	NAMESPACE smath::
@@ -96,4 +108,3 @@ if(SMATH_BUILD_TESTS)
 	include(GoogleTest)
 	gtest_discover_tests(smath_tests)
 endif()
-

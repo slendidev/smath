@@ -1,0 +1,3 @@
+#pragma once
+
+#include <smath/smath.hpp>

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 struct ExternalVec3f
 {

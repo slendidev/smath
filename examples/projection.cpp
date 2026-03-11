@@ -10,7 +10,7 @@
 #include <Windows.h>
 #endif
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 using smath::Vec2;
 
 enum Color : uint8_t

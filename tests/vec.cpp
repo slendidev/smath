@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 using smath::Vec;
 using smath::Vec2;
