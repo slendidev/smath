@@ -12,13 +12,26 @@
 	</a>
 </p>
 
+## Features
+
+- Generic `Vec<N, T>` class with useful aliases `Vec2/Vec3/Vec4` and friendly accessors (`x/y/z/w`, `r/g/b/a`). They support approx-equal and tuple/structured bindings.
+- `std::format` support.
+- Compile-time swizzles via `swizzle<"...">`.
+- Generic matrix `Mat` class with useful aliases `Mat2/Mat3/Mat4`.
+- `Quaternion<T>` built on `Vec4`.
+- Angle helpers `rad/deg/turns` respecting a configurable base unit via the macro `SMATH_ANGLE_UNIT`.
+- Optional implicit conversions.
+- Packing utilities for normalized RGBA (`pack_unorm4x8`, `unpack_snorm4x8`, etc.).
+- C++20 modules support.
+- Built-in interop adapter and optional interop headers for various libraries.
+
 ## Quick Start
 
 Create `main.cpp`:
 
 ```cpp
 #include <print>
-#include <smath.hpp>
+#include <smath/smath.hpp>
 
 int main() {
   using namespace smath;
@@ -39,17 +52,20 @@ g++ -std=c++23 -Iinclude main.cpp -o quickstart
 ./quickstart
 ```
 
-## Features
+## Interop Headers
 
-- Generic `Vec<N, T>` class with useful aliases `Vec2/Vec3/Vec4` and friendly accessors (`x/y/z/w`, `r/g/b/a`). They support approx-equal and tuple/structured bindings.
-- `std::format` support.
-- Compile-time swizzles via `swizzle<"...">`.
-- Generic matrix `Mat` class with useful aliases `Mat2/Mat3/Mat4`.
-- `Quaternion<T>` built on `Vec4`.
-- Angle helpers `rad/deg/turns` respecting a configurable base unit via the macro `SMATH_ANGLE_UNIT`.
-- Optional implicit conversions.
-- Packing utilities for normalized RGBA (`pack_unorm4x8`, `unpack_snorm4x8`, etc.).
-- C++20 modules support.
+smath ships optional interop adapters under `include/smath/interop/`.
+
+When installing with CMake, interop headers are gated behind:
+
+- `-DSMATH_INSTALL_INTEROP_HEADERS=ON`
+
+All of them plug into the same generic API defined in `smath.hpp`:
+
+```cpp
+auto v = smath::from_external(external_value);
+auto ext = smath::to_external<ExternalType>(smath_value);
+```
 
 ## License
 

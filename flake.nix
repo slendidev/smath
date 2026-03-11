@@ -55,10 +55,14 @@
             })
           ];
 
+          extraCMakeFlags = [
+            "-DSMATH_INSTALL_INTEROP_HEADERS=ON"
+          ];
+
           installPhase = ''
             runHook preInstall
-            mkdir -p $out/include/smath
-            cp ../include/smath/smath.hpp $out/include/smath/
+            mkdir -p $out/include/
+            cp -r ../include/smath/ $out/include/
             runHook postInstall
           '';
 

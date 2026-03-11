@@ -8,6 +8,7 @@ option(SMATH_BUILD_EXAMPLES "Build example programs" ON)
 option(SMATH_BUILD_TESTS "Build unit tests" ON)
 option(SMATH_BUILD_MODULES "Enable C++20 modules support" OFF)
 option(SMATH_ENABLE_LEGACY_HEADER "Install legacy include <smath.hpp> shim" OFF)
+option(SMATH_INSTALL_INTEROP_HEADERS "Install interop headers" OFF)
 
 if(SMATH_BUILD_MODULES)
 	message(STATUS "Building smath C++ module")
@@ -27,7 +28,11 @@ include(CMakePackageConfigHelpers)
 install(TARGETS smath
 	EXPORT smathTargets
 )
-install(DIRECTORY include/ DESTINATION include)
+install(FILES include/smath/smath.hpp DESTINATION include/smath)
+
+if(SMATH_INSTALL_INTEROP_HEADERS)
+	install(DIRECTORY include/smath/interop DESTINATION include/smath)
+endif()
 
 if(SMATH_ENABLE_LEGACY_HEADER)
 	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
