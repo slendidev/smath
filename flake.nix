@@ -27,6 +27,7 @@
             clang-tools
             lldb
             pkg-config
+            doxygen
           ];
         };
 

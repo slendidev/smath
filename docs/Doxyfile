@@ -1,0 +1,27 @@
+PROJECT_NAME           = "smath"
+OUTPUT_DIRECTORY       = build/docs
+CREATE_SUBDIRS         = NO
+
+INPUT                  = include README.md
+USE_MDFILE_AS_MAINPAGE = README.md
+TOC_INCLUDE_HEADINGS   = 0
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.h *.md
+EXCLUDE                = include/smath/interop
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_MAN           = YES
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+HTML_COLORSTYLE        = LIGHT
+HTML_EXTRA_STYLESHEET  = docs/vendor/doxygen-awesome.css
+
+WARN_IF_UNDOCUMENTED   = YES
+QUIET                  = NO
+EXCLUDE_SYMBOLS        = std smath::detail smath::interop_adapter interop_adapter smath::from_external from_external smath::to_external to_external

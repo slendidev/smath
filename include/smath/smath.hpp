@@ -154,6 +154,11 @@ template<class T> constexpr auto unpack_snorm8(std::int8_t b) -> T
 
 template<std::size_t N, typename T = float>
 requires std::is_arithmetic_v<T>
+/**
+ * @brief Fixed-size arithmetic vector.
+ * @tparam N Number of components.
+ * @tparam T Component type.
+ */
 struct Vec : std::array<T, N>
 {
 private:
@@ -173,12 +178,17 @@ private:
 
 public:
 	// Constructors
+	/** @brief Constructs a zero-initialized vector. */
 	constexpr Vec() noexcept
 	{
 		for (auto &v : *this)
 			v = T(0);
 	}
 
+	/**
+	 * @brief Fills all components with the same scalar.
+	 * @param s Scalar value assigned to every component.
+	 */
 	explicit constexpr Vec(T const &s) noexcept
 	{
 		for (auto &v : *this)
@@ -189,6 +199,10 @@ public:
 	requires((detail::is_scalar_v<Args> || detail::is_Vec_v<Args>) && ...)
 	    && (total_extent<Args...>() == N)
 	    && (!(sizeof...(Args) == 1 && (detail::is_Vec_v<Args> && ...)))
+	/**
+	 * @brief Constructs from scalars and/or vectors whose flattened extent is
+	 * N.
+	 */
 	constexpr Vec(Args &&...args) noexcept
 	{
 		std::size_t i = 0;
@@ -234,6 +248,9 @@ public:
 	}
 
 	template<class... Args>
+	/**
+	 * @brief Unpacks components into output references.
+	 */
 	constexpr auto unpack(Args &...args) noexcept -> void
 	{
 		unpack_impl(std::index_sequence_for<Args...> {}, args...);
@@ -324,6 +341,7 @@ public:
 		return !(*this == v);
 	}
 
+	/** @brief Returns Euclidean magnitude. */
 	constexpr auto magnitude() const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
@@ -332,6 +350,7 @@ public:
 			total += v * v;
 		return std::sqrt(total);
 	}
+	/** @brief Alias for magnitude(). */
 	constexpr auto length() const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
@@ -340,6 +359,9 @@ public:
 
 	template<typename U = T>
 	requires std::is_floating_point_v<U>
+	/**
+	 * @brief Normalizes with zero fallback for very small magnitudes.
+	 */
 	constexpr auto normalized_safe(U eps = EPS_DEFAULT) const noexcept -> Vec
 	{
 		auto m = magnitude();
@@ -347,27 +369,32 @@ public:
 	}
 	template<typename U = T>
 	requires std::is_floating_point_v<U>
+	/** @brief Alias for normalized_safe(). */
 	constexpr auto normalize_safe(U eps = EPS_DEFAULT) const noexcept -> Vec
 	{
 		return normalized_safe(eps);
 	}
 
+	/** @brief Returns normalized vector; undefined for zero magnitude. */
 	[[nodiscard]] constexpr auto normalized() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return (*this) / this->magnitude();
 	}
+	/** @brief Alias for normalized(). */
 	[[nodiscard]] constexpr auto normalize() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return this->normalized();
 	}
+	/** @brief Alias for normalized(). */
 	[[nodiscard]] constexpr auto unit() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return this->normalized();
 	}
 
+	/** @brief Dot product with `other`. */
 	[[nodiscard]] constexpr auto dot(Vec<N, T> const &other) const noexcept -> T
 	{
 		T res = 0;
@@ -378,6 +405,13 @@ public:
 	}
 
 	static constexpr T EPS_DEFAULT = T(1e-6);
+
+	/**
+	 * @brief Approximate equality with per-component absolute epsilon.
+	 * @param rhs Vec to compare against.
+	 * @param eps Absolute tolerance per component.
+	 * @return `true` when all components are approximately equal.
+	 */
 	template<class U = T>
 	requires std::is_floating_point_v<U>
 	[[nodiscard]] constexpr auto approx_equal(
@@ -391,6 +425,7 @@ public:
 	}
 
 	template<class U = T>
+	/** @brief Magnitude computed in promoted type `U` (or `double`). */
 	constexpr auto magnitude_promoted() const noexcept
 	requires std::is_floating_point_v<T>
 	{
@@ -403,6 +438,7 @@ public:
 
 	template<typename U = T>
 	requires(N == 3)
+	/** @brief 3D cross product. */
 	constexpr auto cross(Vec const &r) const noexcept -> Vec
 	{
 		return {
@@ -412,12 +448,14 @@ public:
 		};
 	}
 
+	/** @brief Distance between this vector and `r`. */
 	constexpr auto distance(Vec const &r) const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
 		return (*this - r).magnitude();
 	}
 
+	/** @brief Projection of this vector onto `n`. */
 	constexpr auto project_onto(Vec const &n) const noexcept -> Vec
 	requires std::is_floating_point_v<T>
 	{
@@ -507,6 +545,11 @@ constexpr T const &&get(Vec<N, T> const &&v) noexcept
 
 template<std::size_t N, typename T = float>
 requires std::is_arithmetic_v<T>
+/**
+ * @brief Return type used by swizzle operations.
+ *
+ * Produces `T` when `N == 1`, otherwise `Vec<N, T>`.
+ */
 using VecOrScalar = std::conditional_t<N == 1, T, Vec<N, T>>;
 
 namespace detail
@@ -580,22 +623,39 @@ concept ValidSwizzle
 
 template<detail::FixedString S, std::size_t N, typename T>
 requires detail::ValidSwizzle<S, N>
+/**
+ * @brief Compile-time swizzle selection.
+ * @tparam S Swizzle pattern like `"xy"`, `"rgba"`, or `"stp"`.
+ * @param v Source vector.
+ * @return Swizzled scalar/vector according to `S`.
+ */
 constexpr auto swizzle(Vec<N, T> const &v) -> VecOrScalar<S.size, T>
 {
 	return detail::swizzle_impl<S>(v, std::make_index_sequence<S.size> {});
 }
 
+/** @brief 2D float vector alias. */
 using Vec2 = Vec<2>;
+/** @brief 3D float vector alias. */
 using Vec3 = Vec<3>;
+/** @brief 4D float vector alias. */
 using Vec4 = Vec<4>;
 
+/** @brief 2D double vector alias. */
 using Vec2d = Vec<2, double>;
+/** @brief 3D double vector alias. */
 using Vec3d = Vec<3, double>;
+/** @brief 4D double vector alias. */
 using Vec4d = Vec<4, double>;
 
 template<class T>
 using angle_ret_t = std::conditional_t<std::is_same_v<T, float>, float, double>;
 
+/**
+ * @brief Convert degrees to the configured angle unit.
+ * @param value Angle in degrees.
+ * @return Angle in `SMATH_ANGLE_UNIT`.
+ */
 template<class T> constexpr auto deg(T value)
 {
 	using R = angle_ret_t<T>;
@@ -610,6 +670,11 @@ template<class T> constexpr auto deg(T value)
 	}
 }
 
+/**
+ * @brief Convert radians to the configured angle unit.
+ * @param value Angle in radians.
+ * @return Angle in `SMATH_ANGLE_UNIT`.
+ */
 template<class T> constexpr auto rad(T value)
 {
 	using R = angle_ret_t<T>;
@@ -625,6 +690,11 @@ template<class T> constexpr auto rad(T value)
 	}
 }
 
+/**
+ * @brief Convert turns to the configured angle unit.
+ * @param value Angle in turns.
+ * @return Angle in `SMATH_ANGLE_UNIT`.
+ */
 template<class T> constexpr auto turns(T value)
 {
 	using R = angle_ret_t<T>;
@@ -643,13 +713,19 @@ template<std::size_t R, std::size_t C, typename T>
 requires std::is_arithmetic_v<T>
 struct Mat;
 
+/**
+ * @brief Quaternion represented as `(x, y, z, w)`.
+ * @tparam T Component type.
+ */
 template<class T> struct Quaternion : Vec<4, T>
 {
 	using Base = Vec<4, T>;
 	using Base::Base;
 	using Base::operator=;
 
+	/** @brief Returns this quaternion as its vector base type. */
 	constexpr Base &vec() noexcept { return *this; }
+	/** @brief Returns this quaternion as its vector base type. */
 	constexpr Base const &vec() const noexcept { return *this; }
 
 	constexpr T &x() noexcept { return Base::x(); }
@@ -661,6 +737,11 @@ template<class T> struct Quaternion : Vec<4, T>
 	constexpr T &w() noexcept { return Base::w(); }
 	constexpr T const &w() const noexcept { return Base::w(); }
 
+	/**
+	 * @brief Hamilton product.
+	 * @param rhs Right-hand quaternion.
+	 * @return Product quaternion.
+	 */
 	constexpr auto operator*(Quaternion const &rhs) const noexcept -> Quaternion
 	{
 		Quaternion r;
@@ -678,6 +759,10 @@ template<class T> struct Quaternion : Vec<4, T>
 		return r;
 	}
 
+	/**
+	 * @brief Converts this quaternion to a 4x4 rotation matrix.
+	 * @return Homogeneous rotation matrix.
+	 */
 	[[nodiscard]] constexpr auto as_matrix() const noexcept -> Mat<4, 4, T>
 	{
 		auto const xx = x() * x();
@@ -698,6 +783,12 @@ template<class T> struct Quaternion : Vec<4, T>
 		};
 	}
 
+	/**
+	 * @brief Builds a quaternion from axis-angle input.
+	 * @param axis Rotation axis.
+	 * @param angle Rotation angle in configured angle units.
+	 * @return Quaternion representing the rotation.
+	 */
 	[[nodiscard]] static constexpr auto from_axis_angle(
 	    Vec<3, T> const &axis, T const angle) noexcept -> Quaternion
 	{
@@ -717,6 +808,10 @@ template<class T> struct Quaternion : Vec<4, T>
 
 template<class T>
 requires std::is_floating_point_v<T>
+/**
+ * @brief Packs `[0, 1]` RGBA values into 4x8-bit UNORM.
+ * @return Packed 32-bit value in RGBA byte order.
+ */
 [[nodiscard]] constexpr auto pack_unorm4x8(Vec<4, T> const &v) -> std::uint32_t
 {
 	std::uint32_t r = detail::pack_unorm8(v[0]);
@@ -729,6 +824,10 @@ requires std::is_floating_point_v<T>
 
 template<class T>
 requires std::is_floating_point_v<T>
+/**
+ * @brief Packs `[-1, 1]` RGBA values into 4x8-bit SNORM.
+ * @return Packed 32-bit value in RGBA byte order.
+ */
 [[nodiscard]] constexpr auto pack_snorm4x8(Vec<4, T> const &v) -> std::uint32_t
 {
 	std::uint32_t r = static_cast<std::uint8_t>(detail::pack_snorm8(v[0]));
@@ -741,6 +840,10 @@ requires std::is_floating_point_v<T>
 
 template<class T = float>
 requires std::is_floating_point_v<T>
+/**
+ * @brief Unpacks a 4x8-bit UNORM RGBA value.
+ * @return RGBA vector with components in `[0, 1]`.
+ */
 [[nodiscard]] constexpr auto unpack_unorm4x8(std::uint32_t packed) -> Vec<4, T>
 {
 	std::uint8_t r = static_cast<std::uint8_t>(packed & 0xFFu);
@@ -758,6 +861,10 @@ requires std::is_floating_point_v<T>
 
 template<class T = float>
 requires std::is_floating_point_v<T>
+/**
+ * @brief Unpacks a 4x8-bit SNORM RGBA value.
+ * @return RGBA vector with components in `[-1, 1]`.
+ */
 [[nodiscard]] constexpr auto unpack_snorm4x8(std::uint32_t packed) -> Vec<4, T>
 {
 	std::int8_t r = static_cast<std::int8_t>(packed & 0xFFu);
@@ -775,6 +882,12 @@ requires std::is_floating_point_v<T>
 
 template<std::size_t R, std::size_t C, typename T = float>
 requires std::is_arithmetic_v<T>
+/**
+ * @brief Column-major matrix with `R` rows and `C` columns.
+ * @tparam R Row count.
+ * @tparam C Column count.
+ * @tparam T Scalar type.
+ */
 struct Mat : std::array<Vec<R, T>, C>
 {
 	using Base = std::array<Vec<R, T>, C>;
@@ -791,12 +904,17 @@ struct Mat : std::array<Vec<R, T>, C>
 		return col(column)[row];
 	}
 
+	/** @brief Constructs a zero matrix. */
 	constexpr Mat() noexcept
 	{
 		for (auto &col : *this)
 			col = Vec<R, T> {};
 	}
 
+	/**
+	 * @brief Constructs a diagonal matrix.
+	 * @param diag Value used for every diagonal component.
+	 */
 	constexpr explicit Mat(T const &diag) noexcept
 	requires(R == C)
 	{
@@ -809,6 +927,10 @@ struct Mat : std::array<Vec<R, T>, C>
 	template<typename... Cols>
 	requires(sizeof...(Cols) == C
 	    && (std::same_as<std::remove_cvref_t<Cols>, Vec<R, T>> && ...))
+	/**
+	 * @brief Constructs from explicit column vectors.
+	 * @param cols Columns in column-major order.
+	 */
 	constexpr Mat(Cols const &...cols) noexcept : Base { cols... }
 	{ }
 
@@ -905,6 +1027,13 @@ struct Mat : std::array<Vec<R, T>, C>
 	}
 
 	static constexpr T EPS_DEFAULT = T(1e-6);
+
+	/**
+	 * @brief Approximate matrix equality check.
+	 * @param rhs Matrix to compare against.
+	 * @param eps Absolute tolerance per component.
+	 * @return `true` when all columns are approximately equal.
+	 */
 	template<class U = T>
 	requires std::is_floating_point_v<U>
 	[[nodiscard]] constexpr auto approx_equal(
@@ -916,6 +1045,7 @@ struct Mat : std::array<Vec<R, T>, C>
 		return true;
 	}
 
+	/** @brief Returns the transposed matrix. */
 	[[nodiscard]] constexpr auto transposed() const noexcept -> Mat<C, R, T>
 	{
 		Mat<C, R, T> r {};
@@ -925,6 +1055,7 @@ struct Mat : std::array<Vec<R, T>, C>
 		return r;
 	}
 
+	/** @brief Returns an identity matrix. */
 	[[nodiscard]] static constexpr auto identity() noexcept -> Mat<R, C, T>
 	requires(R == C)
 	{
@@ -935,15 +1066,25 @@ struct Mat : std::array<Vec<R, T>, C>
 	}
 };
 
+/** @brief 2x2 float matrix alias. */
 using Mat2 = Mat<2, 2>;
+/** @brief 3x3 float matrix alias. */
 using Mat3 = Mat<3, 3>;
+/** @brief 4x4 float matrix alias. */
 using Mat4 = Mat<4, 4>;
 
+/** @brief 2x2 double matrix alias. */
 using Mat2d = Mat<2, 2, double>;
+/** @brief 3x3 double matrix alias. */
 using Mat3d = Mat<3, 3, double>;
+/** @brief 4x4 double matrix alias. */
 using Mat4d = Mat<4, 4, double>;
 
 template<std::size_t R, std::size_t C, typename T>
+/**
+ * @brief Matrix-vector multiplication.
+ * @return Product vector.
+ */
 [[nodiscard]] constexpr Vec<R, T> operator*(
     Mat<R, C, T> const &m, Vec<C, T> const &v) noexcept
 {
@@ -953,7 +1094,10 @@ template<std::size_t R, std::size_t C, typename T>
 	return out;
 }
 
-// Matrix * Matrix
+/**
+ * @brief Matrix-matrix multiplication.
+ * @return Product matrix.
+ */
 template<std::size_t R, std::size_t C, std::size_t K, typename T>
 [[nodiscard]] constexpr Mat<R, K, T> operator*(
     Mat<R, C, T> const &a, Mat<C, K, T> const &b) noexcept
@@ -970,7 +1114,10 @@ template<std::size_t R, std::size_t C, std::size_t K, typename T>
 	return out;
 }
 
-// Mat3 transformations
+/** @name 2D transforms (Mat3)
+ *  @{ */
+
+/** @brief Applies translation to an existing 3x3 transform. */
 template<typename T>
 [[nodiscard]] inline auto translate(Mat<3, 3, T> const &m, Vec<2, T> const &v)
     -> Mat<3, 3, T>
@@ -980,6 +1127,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Creates a 3x3 translation matrix. */
 template<typename T>
 [[nodiscard]] inline auto translate(Vec<2, T> const &v) -> Mat<3, 3, T>
 {
@@ -989,6 +1137,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies rotation to an existing 3x3 transform. */
 template<typename T>
 [[nodiscard]] inline auto rotate(Mat<3, 3, T> const &m, T const angle)
     -> Mat<3, 3, T>
@@ -1005,6 +1154,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies scaling to an existing 3x3 transform. */
 template<typename T>
 [[nodiscard]] inline auto scale(Mat<3, 3, T> const &m, Vec<2, T> const &v)
     -> Mat<3, 3, T>
@@ -1018,6 +1168,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies X shear to an existing 3x3 transform. */
 template<typename T>
 [[nodiscard]] inline auto shear_x(Mat<3, 3, T> const &m, T const v)
     -> Mat<3, 3, T>
@@ -1027,6 +1178,7 @@ template<typename T>
 	return m * res;
 }
 
+/** @brief Applies Y shear to an existing 3x3 transform. */
 template<typename T>
 [[nodiscard]] inline auto shear_y(Mat<3, 3, T> const &m, T const v)
     -> Mat<3, 3, T>
@@ -1036,7 +1188,12 @@ template<typename T>
 	return m * res;
 }
 
-// Mat4 transformations
+/** @} */
+
+/** @name 3D transforms (Mat4)
+ *  @{ */
+
+/** @brief Applies translation to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto translate(Mat<4, 4, T> const &m, Vec<3, T> const &v)
     -> Mat<4, 4, T>
@@ -1046,6 +1203,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Creates a 4x4 translation matrix. */
 template<typename T>
 [[nodiscard]] inline auto translate(Vec<3, T> const &v) -> Mat<4, 4, T>
 {
@@ -1056,6 +1214,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies rotation to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto rotate(Mat<4, 4, T> const &m, T const angle)
     -> Mat<4, 4, T>
@@ -1073,6 +1232,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies scaling to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto scale(Mat<4, 4, T> const &m, Vec<3, T> const &v)
     -> Mat<4, 4, T>
@@ -1087,6 +1247,7 @@ template<typename T>
 	return res;
 }
 
+/** @brief Applies X shear to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto shear_x(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
@@ -1096,6 +1257,7 @@ template<typename T>
 	return m * res;
 }
 
+/** @brief Applies Y shear to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto shear_y(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
@@ -1105,6 +1267,7 @@ template<typename T>
 	return m * res;
 }
 
+/** @brief Applies Z shear to an existing 4x4 transform. */
 template<typename T>
 [[nodiscard]] inline auto shear_z(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
@@ -1114,6 +1277,17 @@ template<typename T>
 	return m * res;
 }
 
+/**
+ * @brief Builds an orthographic projection matrix.
+ * @param left Left clipping plane.
+ * @param right Right clipping plane.
+ * @param bottom Bottom clipping plane.
+ * @param top Top clipping plane.
+ * @param near Near clipping plane.
+ * @param far Far clipping plane.
+ * @param flip_z_axis Whether to flip the output Z axis convention.
+ * @return Orthographic projection matrix.
+ */
 template<typename T>
 [[nodiscard]] inline auto matrix_ortho3d(T const left,
     T const right,
@@ -1140,6 +1314,9 @@ template<typename T>
 	return res;
 }
 
+/**
+ * @brief Builds a finite perspective projection matrix.
+ */
 template<typename T>
 inline auto matrix_perspective(
     T fovy, T aspect, T znear, T zfar, bool flip_z_axis = false) -> Mat<4, 4, T>
@@ -1166,6 +1343,9 @@ inline auto matrix_perspective(
 	return m;
 }
 
+/**
+ * @brief Builds a right-handed look-at view matrix.
+ */
 template<typename T>
 [[nodiscard]] inline auto matrix_look_at(
     Vec<3, T> const eye, Vec<3, T> const center, Vec<3, T> const up)
@@ -1183,6 +1363,9 @@ template<typename T>
 	};
 }
 
+/**
+ * @brief Builds a perspective matrix with an infinite far plane.
+ */
 template<typename T>
 [[nodiscard]] inline auto matrix_infinite_perspective(
     T const fovy, T const aspect, T const znear, bool flip_z_axis = false)
@@ -1207,8 +1390,16 @@ template<typename T>
 	return m;
 }
 
+/** @} */
+
+/**
+ * @brief Extension point for external math-type interoperability.
+ */
 template<class Ext> struct interop_adapter;
 
+/**
+ * @brief Converts an external value into its mapped smath type.
+ */
 template<class Ext>
 constexpr auto from_external(Ext const &ext) ->
     typename interop_adapter<Ext>::smath_type
@@ -1216,6 +1407,9 @@ constexpr auto from_external(Ext const &ext) ->
 	return interop_adapter<Ext>::to_smath(ext);
 }
 
+/**
+ * @brief Converts a smath value into an external type.
+ */
 template<class Ext, class SMathT>
 constexpr auto to_external(SMathT const &value) -> Ext
 {
