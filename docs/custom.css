@@ -15,7 +15,3 @@
 html.dark-mode #projectlogo img {
   content: url('smath_dark.svg');
 }
-
-.header:has(+ .contents .anchor#md__r_e_a_d_m_e) {
-  display: none;
-}
