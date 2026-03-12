@@ -33,6 +33,10 @@
 #include <type_traits>
 
 #ifndef SMATH_ANGLE_UNIT
+/**
+ * @brief Angle unit to be used for the actual values. Can be rad, deg, or
+ * turns.
+ */
 #define SMATH_ANGLE_UNIT rad
 #endif // SMATH_ANGLE_UNIT
 
@@ -46,8 +50,10 @@ struct Vec;
 namespace detail
 {
 
+/// \cond DO_NOT_DOCUMENT
 #define SMATH_STR(x) #x
 #define SMATH_XSTR(x) SMATH_STR(x)
+/// \endcond
 
 consteval auto streq(const char *a, const char *b) -> bool
 {
@@ -212,6 +218,8 @@ public:
 	// Member accesses
 	// NOTE: This can (probably) be improved with C++26 reflection in the
 	// future.
+
+/// \cond DO_NOT_DOCUMENT
 #define VEC_ACC(component, req, idx) \
 	constexpr auto component() noexcept -> T &requires(N >= req) { \
 		return (*this)[idx]; \
@@ -239,6 +247,7 @@ public:
 	VEC_ACC(u, 1, 0)
 	VEC_ACC(v, 2, 1)
 #undef VEC_ACC
+	/// \endcond
 
 	template<class... Args, std::size_t... Is>
 	constexpr void unpack_impl(
@@ -287,6 +296,7 @@ public:
 	}
 
 	// Members
+/// \cond DO_NOT_DOCUMENT
 #define VEC_OP(op) \
 	constexpr auto operator op(Vec const &rhs) const noexcept -> Vec \
 	{ \
@@ -327,6 +337,7 @@ public:
 	VEC_OP_ASSIGN(*)
 	VEC_OP_ASSIGN(/)
 #undef VEC_OP_ASSIGN
+	/// \endcond
 
 	constexpr auto operator==(Vec const &v) const noexcept -> bool
 	{
