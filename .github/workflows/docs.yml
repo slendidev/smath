@@ -21,13 +21,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Doxygen
-        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz perl
 
       - name: Create output directory
         run: mkdir -p build/docs
 
       - name: Generate docs
-        run: doxygen docs/Doxyfile
+        run: ./docs/build_docs.sh
 
       - name: Disable Jekyll
         run: touch build/docs/html/.nojekyll
