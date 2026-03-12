@@ -116,6 +116,7 @@ TEST(Vec, NormalizeAndSafeNormalize)
 	auto n = v.normalized();
 	auto ns = v.normalized_safe();
 	ExpectVecNear(n, Vec3 { 1.0f, 0.0f, 0.0f });
+	ExpectVecNear(ns, Vec3 { 1.0f, 0.0f, 0.0f });
 
 	Vec3 zero {};
 	auto zs = zero.normalized_safe();

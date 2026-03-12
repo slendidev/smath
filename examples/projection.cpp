@@ -185,7 +185,6 @@ int main()
 	Mapper mp(W, H, scale);
 
 	int pr_axes = 1;
-	auto [cx, cy] = mp.map({ 0, 0 });
 	cvs.hline(H / 2, '-', pr_axes, CLR_AXES);
 	cvs.vline(W / 2, '|', pr_axes, CLR_AXES);
 	cvs.put(W / 2, H / 2, 'O', pr_axes + 1, CLR_AXES);
