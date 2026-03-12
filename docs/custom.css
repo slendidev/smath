@@ -1,0 +1,21 @@
+#titlearea {
+  padding-right: 0;
+}
+
+#projectlogo img {
+  height: 40px;
+  width: auto;
+}
+
+#projectname,
+#projectbrief {
+  display: none;
+}
+
+html.dark-mode #projectlogo img {
+  content: url('smath_dark.svg');
+}
+
+.header:has(+ .contents .anchor#md__r_e_a_d_m_e) {
+  display: none;
+}

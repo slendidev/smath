@@ -20,7 +20,10 @@ GENERATE_TREEVIEW      = YES
 DISABLE_INDEX          = NO
 FULL_SIDEBAR           = NO
 HTML_COLORSTYLE        = LIGHT
-HTML_EXTRA_STYLESHEET  = docs/vendor/doxygen-awesome.css
+PROJECT_LOGO           = docs/smath_light.svg
+HTML_EXTRA_STYLESHEET  = docs/vendor/doxygen-awesome.css docs/custom.css
+HTML_EXTRA_FILES       = docs/smath_dark.svg docs/smath_big.svg
+LAYOUT_FILE            = docs/DoxygenLayout.xml
 
 WARN_IF_UNDOCUMENTED   = YES
 QUIET                  = NO

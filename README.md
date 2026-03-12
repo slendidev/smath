@@ -1,7 +1,7 @@
 <p align="center">
-  <img alt="smath logo" width="100%" src="https://github.com/user-attachments/assets/d6f2ef4b-eca0-4004-9099-37423528bcba" />
-  <br><br>
-  <a href="https://github.com/slendidev/smath/actions/workflows/build.yml">
+	<img alt="smath logo" width="100%" src="https://paste.slendi.dev/LcCPsJ.svg" />
+	<br><br>
+	<a href="https://github.com/slendidev/smath/actions/workflows/build.yml">
 		<img src="https://github.com/slendidev/smath/actions/workflows/build.yml/badge.svg" alt="Build">
 	</a>
 	<a href="LICENSE.txt">

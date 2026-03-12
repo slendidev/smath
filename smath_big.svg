@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1280"
+   height="640"
+   viewBox="0 0 1280.0001 640.00006"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient13">
+      <stop
+         style="stop-color:#25ff0c;stop-opacity:1;"
+         offset="0"
+         id="stop12" />
+      <stop
+         style="stop-color:#16d800;stop-opacity:1;"
+         offset="1"
+         id="stop13" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient10">
+      <stop
+         style="stop-color:#25ff0c;stop-opacity:1;"
+         offset="0"
+         id="stop10" />
+      <stop
+         style="stop-color:#25ff0c;stop-opacity:1;"
+         offset="1"
+         id="stop11" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient8">
+      <stop
+         style="stop-color:#c50000;stop-opacity:1;"
+         offset="0"
+         id="stop8" />
+      <stop
+         style="stop-color:#ff0c0c;stop-opacity:1;"
+         offset="1"
+         id="stop9" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop5" />
+      <stop
+         style="stop-color:#969696;stop-opacity:1;"
+         offset="1"
+         id="stop6" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#linearGradient5"
+       id="linearGradient6-2"
+       x1="482.5849"
+       y1="589.83472"
+       x2="613.15253"
+       y2="-24.437733"
+       gradientUnits="userSpaceOnUse" />
+    <rect
+       x="227.90907"
+       y="175.81558"
+       width="659.85107"
+       height="227.90907"
+       id="rect1-5" />
+    <linearGradient
+       xlink:href="#linearGradient10"
+       id="linearGradient11-0"
+       x1="50.894115"
+       y1="80.727814"
+       x2="50.894115"
+       y2="68.866821"
+       gradientUnits="userSpaceOnUse" />
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow-45"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path8-2" />
+    </marker>
+    <linearGradient
+       xlink:href="#linearGradient8"
+       id="linearGradient9-6"
+       x1="107.55984"
+       y1="103.63171"
+       x2="51.891579"
+       y2="103.63171"
+       gradientUnits="userSpaceOnUse" />
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow-4-1"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path8-3-1" />
+    </marker>
+    <linearGradient
+       xlink:href="#linearGradient13"
+       id="linearGradient16"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1,0,0,0.93927134,0,6.2326702)"
+       x1="50.894115"
+       y1="80.727814"
+       x2="50.894115"
+       y2="68.866821" />
+  </defs>
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+     id="rect16"
+     width="1280.0001"
+     height="640"
+     x="1.1474608e-06"
+     y="2.8421709e-14" />
+  <g
+     id="layer1"
+     transform="translate(-419.99999)">
+    <g
+       id="g13-2"
+       transform="matrix(4.6783888,0,0,4.6783888,411.42933,-46.143325)">
+      <text
+         xml:space="preserve"
+         transform="matrix(0.26458333,0,0,0.26458333,2.4199432,-2.3937254)"
+         id="text1-0"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:192px;font-family:'Shree Devanagari 714';-inkscape-font-specification:'Shree Devanagari 714, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect1-5);display:inline;fill:url(#linearGradient6-2);stroke-width:7.55906;stroke-dasharray:none"><tspan
+           x="227.9082"
+           y="353.41641"
+           id="tspan1">SMATH</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.37934px;font-family:'Shree Devanagari 714';-inkscape-font-specification:'Shree Devanagari 714, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke-width:2;stroke-dasharray:none"
+         x="110.62661"
+         y="105.75446"
+         id="text2-1"><tspan
+           id="tspan2-24"
+           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.37934px;font-family:'Shree Devanagari 714';-inkscape-font-specification:'Shree Devanagari 714, Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:2;stroke-dasharray:none"
+           x="110.62661"
+           y="105.75446">Linear algebra library for C++23</tspan></text>
+      <path
+         style="fill:#000000;stroke:url(#linearGradient11-0);stroke-width:2;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow-45)"
+         d="M 50.894116,102.63145 V 56.432683"
+         id="path4-5" />
+      <path
+         style="fill:#000000;stroke:url(#linearGradient16);stroke-width:1.93832;stroke-dasharray:none;stroke-opacity:1"
+         d="M 50.894116,102.63145 V 59.238272"
+         id="path4-0-5" />
+      <path
+         style="fill:none;stroke:url(#linearGradient9-6);stroke-width:2;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow-4-1)"
+         d="m 51.891583,103.63172 h 46.19876"
+         id="path4-9-23" />
+      <path
+         style="fill:#ff0c0c;fill-opacity:1;stroke:none;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+         d="m 51.891583,104.63115 v -1.9997 l -1.998196,1.99844 z"
+         id="path5-2" />
+      <path
+         style="fill:#25ff0c;fill-opacity:1;stroke:none;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+         d="m 49.895018,102.63082 v 1.9997 l 1.998196,-1.99844 z"
+         id="path5-8-3" />
+      <circle
+         style="fill:#1162ff;fill-opacity:1;stroke:none;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+         id="path13-1"
+         cx="50.894115"
+         cy="103.6313"
+         r="3.4155982" />
+    </g>
+  </g>
+</svg>
