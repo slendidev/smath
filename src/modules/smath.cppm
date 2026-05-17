@@ -12,10 +12,12 @@ export using ::smath::Mat;
 
 export using ::smath::Vec2;
 export using ::smath::Vec3;
+export using ::smath::AVec3
 export using ::smath::Vec4;
 
 export using ::smath::Vec2d;
 export using ::smath::Vec3d;
+export using ::smath::AVec3d;
 export using ::smath::Vec4d;
 
 export using ::smath::Mat2;

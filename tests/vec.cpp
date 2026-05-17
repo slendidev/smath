@@ -9,6 +9,7 @@
 using smath::Vec;
 using smath::Vec2;
 using smath::Vec3;
+using smath::AVec3;
 using smath::Vec4;
 
 template<class T>
@@ -103,8 +104,11 @@ TEST(Vec, MagnitudeAndDot)
 TEST(Vec, Cross3D)
 {
 	Vec3 x { 1.0f, 0.0f, 0.0f };
-	Vec3 y { 0.0f, 1.0f, 0.0f };
-	auto z = x.cross(y);
+	AVec3 y { 0.0f, 1.0f, 0.0f };
+	AVec3 z = x.cross(y);
+	Vec3  w = x.cross(y);
+	EXPECT_EQ(alignof(z), alignof(x[0]) * 4);
+	EXPECT_EQ(alignof(w), alignof(x[0]));
 	EXPECT_EQ(z[0], 0.0f);
 	EXPECT_EQ(z[1], 0.0f);
 	EXPECT_EQ(z[2], 1.0f);
@@ -192,4 +196,15 @@ TEST(Vec, ExplicitConversionBetweenScalarTypes)
 	EXPECT_EQ(vi2[0], 1);
 	EXPECT_EQ(vi2[1], 2);
 	EXPECT_EQ(vi2[2], 3);
+}
+
+// Alignment
+TEST(Vec, Alignment)
+{
+	Vec3 a { 1, 2, 3 };
+	AVec3 b = a;
+	Vec4  c { 1, 2, 3, 4 };
+	EXPECT_EQ(alignof(a), alignof(a[0]));
+	EXPECT_EQ(alignof(b), alignof(b[0]) * 4);
+	EXPECT_EQ(alignof(c), alignof(c[0]) * 4);
 }
