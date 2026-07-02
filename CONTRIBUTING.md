@@ -54,6 +54,20 @@ This project uses `clang-format` to maintain a consistent code style. Before ope
 git ls-files '*.hpp' '*.cpp' | xargs clang-format -i
 ```
 
+## Sign-off (DCO)
+
+Every commit must be signed off by at least one (1) human contributor:
+
+```
+git commit -s
+```
+
+This adds a `Signed-off-by: Your Name <your@email>` trailer certifying that you
+wrote the change (or otherwise have reviewed the commit and have the right to
+submit it) and agree to contribute it under the project's license, per the
+Developer Certificate of Origin (the DCO file in this repository - also at
+https://developercertificate.org).
+
 ## AI-assisted contributions
 
 AI-assisted contributions are allowed, subject to the following:
