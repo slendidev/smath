@@ -23,6 +23,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             cmake
+            cmake-format
             ninja
             clang-tools
             lldb

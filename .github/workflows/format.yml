@@ -1,0 +1,24 @@
+name: Format checks
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Check clang-format
+        run: |
+          nix develop -c sh -lc 'git ls-files "*.cpp" "*.hpp" "*.cppm" | xargs clang-format --dry-run --Werror'
+      - name: Check cmake-format
+        run: |
+          nix develop -c sh -lc 'cmake-format --check CMakeLists.txt src/modules/CMakeLists.txt cmake/smathConfig.cmake.in'
