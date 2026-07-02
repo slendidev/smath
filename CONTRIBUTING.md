@@ -2,7 +2,9 @@
 
 Welcome to `smath` contributors!
 
-This document contains a set of guidelines to contribute to the project. If you feel like there's a mistake or something can be improved to this document, feel free to propose changes in a pull request.
+This document contains a set of guidelines to contribute to the project. If you
+feel like there's a mistake or something can be improved to this document, feel
+free to propose changes in a pull request.
 
 ## Philosophy
 
@@ -51,6 +53,37 @@ This project uses `clang-format` to maintain a consistent code style. Before ope
 ```bash
 git ls-files '*.hpp' '*.cpp' | xargs clang-format -i
 ```
+
+## AI-assisted contributions
+
+AI-assisted contributions are allowed, subject to the following:
+
+- A human must be in the loop at all times. AI tools may assist, but a human
+  contributor must drive the work, review and understand every generated
+  change, and take full responsibility for it. Do not submit code you have not
+  read and understood.
+
+- The assistance must be disclosed. Any commit produced with material AI help
+  must carry an `Assisted-by:` trailer using a format similar to the Linux
+  kernel's AI coding assistant format:
+
+  ```
+  Assisted-by: AGENT_NAME:MODEL_VERSION
+  ```
+
+  `AGENT_NAME` is the AI tool or framework (e.g. Codex, Claude, ...).
+  `MODEL_VERSION` is the full model identifier, all lowercase, including any
+  numeric, snapshot, or version suffix. Do not shorten it to the model family
+  (e.g. use gpt-5-5, not gpt-5; use claude-opus-4-8, not claude-opus).
+
+- Do not add `Co-authored-by:` trailers for the AI assistant. The
+  `Assisted-by:` trailer already serves that purpose.
+
+- The human contributor still signs off (see above). `Signed-off-by:` is the
+  human's certification of, and responsibility for, the change.
+  `Assisted-by:` only records which tool helped. It does not replace the sign-off or the human review.
+
+Unreviewed, bulk, or fully-automated submissions are not accepted.
 
 ## Pull requests
 
