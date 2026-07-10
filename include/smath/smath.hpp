@@ -31,6 +31,7 @@
 #include <numbers>
 #include <optional>
 #include <type_traits>
+#include <bit>
 
 #ifndef SMATH_ANGLE_UNIT
 /**
@@ -40,12 +41,24 @@
 #define SMATH_ANGLE_UNIT rad
 #endif // SMATH_ANGLE_UNIT
 
+#ifdef _MSC_VER
+#define SMATH_INLINE      __forceinline [[msvc::forceinline]] [[msvc::flatten]]
+#define SMATH_CONST       __declspec(noalias)
+#define SMATH_ALIGN(x)    __declspec(align(x))
+#define SMATH_INTRIN_TYPE __declspec(intrin_type)
+#else
+#define SMATH_INLINE      __attribute__((always_inline,flatten)) inline
+#define SMATH_CONST       __attribute__((const))
+#define SMATH_ALIGN(x)    __attribute__((aligned(x)))
+#define SMATH_INTRIN_TYPE __attribute__((__may_alias__))
+#endif
+
 namespace smath
 {
 
-template<std::size_t N, typename T>
+template<std::size_t N, typename T = float, std::size_t A = ((N == std::bit_ceil<std::size_t>(N)) ? N : 1) * alignof(T), std::size_t N_POW2 = std::bit_ceil<std::size_t>(N)>
 requires std::is_arithmetic_v<T>
-struct Vec;
+struct SMATH_INTRIN_TYPE alignas(A) Vec;
 
 namespace detail
 {
@@ -158,14 +171,15 @@ template<class T> constexpr auto unpack_snorm8(std::int8_t b) -> T
 
 } // namespace detail
 
-template<std::size_t N, typename T = float>
+#pragma pack(push,1)
+template<std::size_t N, typename T, std::size_t A, std::size_t N_POW2>
 requires std::is_arithmetic_v<T>
 /**
  * @brief Fixed-size arithmetic vector.
  * @tparam N Number of components.
  * @tparam T Component type.
  */
-struct Vec : std::array<T, N>
+struct SMATH_INTRIN_TYPE alignas(A) Vec : std::array<T, N>
 {
 private:
 	template<class X> static consteval auto extent() -> std::size_t
@@ -250,7 +264,7 @@ public:
 	/// \endcond
 
 	template<class... Args, std::size_t... Is>
-	constexpr void unpack_impl(
+	constexpr SMATH_INLINE void unpack_impl(
 	    std::index_sequence<Is...>, Args &...args) noexcept
 	{
 		((args = (*this)[Is]), ...);
@@ -260,36 +274,38 @@ public:
 	/**
 	 * @brief Unpacks components into output references.
 	 */
-	constexpr auto unpack(Args &...args) noexcept -> void
+	constexpr SMATH_INLINE auto unpack(Args &...args) noexcept -> void
 	{
 		unpack_impl(std::index_sequence_for<Args...> {}, args...);
 	}
 
 	// Unary
-	constexpr auto operator-() noexcept -> Vec
+	SMATH_INLINE auto operator-() noexcept -> Vec
 	{
 		Vec r {};
+		#pragma omp simd
 		for (std::size_t i = 0; i < N; ++i)
 			r[i] = -(*this)[i];
 		return r;
 	}
 
 	// RHS operations
-	friend constexpr auto operator+(T s, Vec const &v) noexcept -> Vec
+	friend constexpr SMATH_INLINE auto operator+(T s, Vec const &v) noexcept -> Vec
 	{
 		return v + s;
 	}
-	friend constexpr auto operator-(T s, Vec const &v) noexcept -> Vec
+	friend constexpr SMATH_INLINE auto operator-(T s, Vec const &v) noexcept -> Vec
 	{
 		return Vec(s) - v;
 	}
-	friend constexpr auto operator*(T s, Vec const &v) noexcept -> Vec
+	friend constexpr SMATH_INLINE auto operator*(T s, Vec const &v) noexcept -> Vec
 	{
 		return v * s;
 	}
-	friend constexpr auto operator/(T s, Vec const &v) noexcept -> Vec
+	friend SMATH_INLINE auto operator/(T s, Vec const &v) noexcept -> Vec
 	{
 		Vec r {};
+		#pragma omp simd
 		for (std::size_t i = 0; i < N; ++i)
 			r[i] = s / v[i];
 		return r;
@@ -298,17 +314,19 @@ public:
 	// Members
 /// \cond DO_NOT_DOCUMENT
 #define VEC_OP(op) \
-	constexpr auto operator op(Vec const &rhs) const noexcept -> Vec \
+	SMATH_INLINE auto operator op(Vec const &rhs) const noexcept -> Vec \
 	{ \
 		Vec result {}; \
+		_Pragma("omp simd") \
 		for (std::size_t i = 0; i < N; ++i) { \
 			result[i] = (*this)[i] op rhs[i]; \
 		} \
 		return result; \
 	} \
-	constexpr auto operator op(T const &rhs) const noexcept -> Vec \
+	SMATH_INLINE auto operator op(T const &rhs) const noexcept -> Vec \
 	{ \
 		Vec result {}; \
+		_Pragma("omp simd") \
 		for (std::size_t i = 0; i < N; ++i) { \
 			result[i] = (*this)[i] op rhs; \
 		} \
@@ -320,14 +338,16 @@ public:
 	VEC_OP(/)
 #undef VEC_OP
 #define VEC_OP_ASSIGN(sym) \
-	constexpr Vec &operator sym##=(Vec const &rhs) noexcept \
+	SMATH_INLINE Vec &operator sym##=(Vec const &rhs) noexcept \
 	{ \
+		_Pragma("omp simd") \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = rhs[i]; \
 		return *this; \
 	} \
-	constexpr Vec &operator sym##=(T const &s) noexcept \
+	SMATH_INLINE Vec &operator sym##=(T const &s) noexcept \
 	{ \
+		_Pragma("omp simd") \
 		for (std::size_t i = 0; i < N; ++i) \
 			(*this)[i] sym## = s; \
 		return *this; \
@@ -339,7 +359,7 @@ public:
 #undef VEC_OP_ASSIGN
 	/// \endcond
 
-	constexpr auto operator==(Vec const &v) const noexcept -> bool
+	constexpr SMATH_INLINE auto operator==(Vec const &v) const noexcept -> bool
 	{
 		for (std::size_t i = 0; i < N; ++i)
 			if ((*this)[i] != v[i])
@@ -347,22 +367,23 @@ public:
 		return true;
 	}
 
-	constexpr auto operator!=(Vec const &v) const noexcept -> bool
+	constexpr SMATH_INLINE auto operator!=(Vec const &v) const noexcept -> bool
 	{
 		return !(*this == v);
 	}
 
 	/** @brief Returns Euclidean magnitude. */
-	constexpr auto magnitude() const noexcept -> T
+	SMATH_INLINE auto magnitude() const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
 		T total = 0;
+		#pragma omp simd reduction(+:total)
 		for (auto const &v : *this)
 			total += v * v;
 		return std::sqrt(total);
 	}
 	/** @brief Alias for magnitude(). */
-	constexpr auto length() const noexcept -> T
+	constexpr SMATH_INLINE auto length() const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
 		return this->magnitude();
@@ -373,7 +394,7 @@ public:
 	/**
 	 * @brief Normalizes with zero fallback for very small magnitudes.
 	 */
-	constexpr auto normalized_safe(U eps = EPS_DEFAULT) const noexcept -> Vec
+	constexpr SMATH_INLINE auto normalized_safe(U eps = EPS_DEFAULT) const noexcept -> Vec
 	{
 		auto m = magnitude();
 		return (m > eps) ? (*this) / m : Vec {};
@@ -387,28 +408,29 @@ public:
 	}
 
 	/** @brief Returns normalized vector; undefined for zero magnitude. */
-	[[nodiscard]] constexpr auto normalized() noexcept -> Vec<N, T>
+	[[nodiscard]] constexpr SMATH_INLINE auto normalized() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return (*this) / this->magnitude();
 	}
 	/** @brief Alias for normalized(). */
-	[[nodiscard]] constexpr auto normalize() noexcept -> Vec<N, T>
+	[[nodiscard]] constexpr SMATH_INLINE auto normalize() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return this->normalized();
 	}
 	/** @brief Alias for normalized(). */
-	[[nodiscard]] constexpr auto unit() noexcept -> Vec<N, T>
+	[[nodiscard]] constexpr SMATH_INLINE auto unit() noexcept -> Vec<N, T>
 	requires std::is_floating_point_v<T>
 	{
 		return this->normalized();
 	}
 
 	/** @brief Dot product with `other`. */
-	[[nodiscard]] constexpr auto dot(Vec<N, T> const &other) const noexcept -> T
+	[[nodiscard]] SMATH_INLINE auto dot(Vec<N, T> const &other) const noexcept -> T
 	{
 		T res = 0;
+		#pragma omp simd reduction(+:res)
 		for (std::size_t i = 0; i < N; ++i) {
 			res += (*this)[i] * other[i];
 		}
@@ -437,20 +459,19 @@ public:
 
 	template<class U = T>
 	/** @brief Magnitude computed in promoted type `U` (or `double`). */
-	constexpr auto magnitude_promoted() const noexcept
+	SMATH_INLINE auto magnitude_promoted() const noexcept
 	requires std::is_floating_point_v<T>
 	{
 		using F = std::conditional_t<std::is_floating_point_v<U>, U, double>;
 		F s = 0;
+		#pragma omp simd reduction(+:s)
 		for (auto v : *this)
 			s += F(v) * F(v);
 		return std::sqrt(s);
 	}
 
-	template<typename U = T>
-	requires(N == 3)
 	/** @brief 3D cross product. */
-	constexpr auto cross(Vec const &r) const noexcept -> Vec
+	constexpr SMATH_INLINE auto cross(Vec const &r) const noexcept -> Vec requires(N >= 3 && r.size() >= 3)
 	{
 		return {
 			(*this)[1] * r[2] - (*this)[2] * r[1],
@@ -460,14 +481,14 @@ public:
 	}
 
 	/** @brief Distance between this vector and `r`. */
-	constexpr auto distance(Vec const &r) const noexcept -> T
+	constexpr SMATH_INLINE auto distance(Vec const &r) const noexcept -> T
 	requires std::is_floating_point_v<T>
 	{
 		return (*this - r).magnitude();
 	}
 
 	/** @brief Projection of this vector onto `n`. */
-	constexpr auto project_onto(Vec const &n) const noexcept -> Vec
+	constexpr SMATH_INLINE auto project_onto(Vec const &n) const noexcept -> Vec
 	requires std::is_floating_point_v<T>
 	{
 		auto d = this->dot(n);
@@ -475,37 +496,40 @@ public:
 		return (nn ? (d / nn) * n : Vec());
 	}
 
-	template<class U>
+	template<class U = T>
 	requires(std::is_arithmetic_v<U> && N >= 1)
-	constexpr explicit(!std::is_convertible_v<U, T>)
-	    Vec(Vec<N, U> const &other) noexcept
+	SMATH_INLINE explicit(!std::is_convertible_v<U, T>)
+	    Vec(Vec const &other) noexcept
 	{
+		#pragma omp simd
 		for (std::size_t i = 0; i < N; ++i)
 			this->operator[](i) = static_cast<T>(other[i]);
 	}
 
-	template<class U>
+	template<std::size_t N_O = N, class U = T, std::size_t A_O = A>
 	requires(std::is_arithmetic_v<U> && N >= 1)
-	constexpr explicit(
-	    !std::is_convertible_v<T, U>) operator Vec<N, U>() const noexcept
+	SMATH_INLINE explicit(
+	    !std::is_convertible_v<T, U>) operator Vec<N_O, U, A_O>() const noexcept
 	{
-		Vec<N, U> r {};
+		Vec<N,U,A_O> r {};
+		#pragma omp simd
 		for (std::size_t i = 0; i < N; ++i)
 			r[i] = static_cast<U>((*this)[i]);
 		return r;
 	}
 
-	template<class U>
+	template<class U = T, std::size_t A_O = A>
 	requires(std::is_arithmetic_v<U> && !std::is_same_v<U, T>)
-	constexpr auto operator=(Vec<N, U> const &rhs) noexcept -> Vec &
+	SMATH_INLINE auto operator=(Vec<N, U, A_O> const &rhs) noexcept -> Vec &
 	{
+		#pragma omp simd
 		for (std::size_t i = 0; i < N; ++i)
 			(*this)[i] = static_cast<T>(rhs[i]);
 		return *this;
 	}
 
 private:
-	constexpr auto fill_one(std::size_t &i, T const &v) noexcept -> void
+	constexpr SMATH_INLINE auto fill_one(std::size_t &i, T const &v) noexcept -> void
 	{
 		(*this)[i++] = v;
 	}
@@ -517,19 +541,22 @@ private:
 		(*this)[i++] = static_cast<T>(v);
 	}
 	template<std::size_t M, class U>
-	constexpr auto fill_one(std::size_t &i, Vec<M, U> const &v) noexcept -> void
+	SMATH_INLINE auto fill_one(std::size_t &i, Vec<M, U> const &v) noexcept -> void
 	{
+		#pragma omp simd
 		for (std::size_t k = 0; k < M; ++k)
 			(*this)[i++] = static_cast<T>(v[k]);
 	}
 #endif // SMATH_IMPLICIT_CONVERSIONS
 	template<std::size_t M>
-	constexpr auto fill_one(std::size_t &i, const Vec<M, T> &v) noexcept -> void
+	SMATH_INLINE auto fill_one(std::size_t &i, const Vec<M, T> &v) noexcept -> void
 	{
+		#pragma omp simd
 		for (std::size_t k = 0; k < M; ++k)
 			(*this)[i++] = static_cast<T>(v[k]);
 	}
 };
+#pragma pack(pop)
 
 template<size_t I, size_t N, class T> constexpr T &get(Vec<N, T> &v) noexcept
 {
@@ -537,7 +564,7 @@ template<size_t I, size_t N, class T> constexpr T &get(Vec<N, T> &v) noexcept
 	return v[I];
 }
 template<size_t I, size_t N, class T>
-constexpr T const &get(Vec<N, T> const &v) noexcept
+constexpr SMATH_INLINE T const &get(Vec<N, T> const &v) noexcept
 {
 	static_assert(I < N);
 	return v[I];
@@ -548,25 +575,25 @@ template<size_t I, size_t N, class T> constexpr T &&get(Vec<N, T> &&v) noexcept
 	return std::move(v[I]);
 }
 template<size_t I, size_t N, class T>
-constexpr T const &&get(Vec<N, T> const &&v) noexcept
+constexpr SMATH_INLINE T const &&get(Vec<N, T> const &&v) noexcept
 {
 	static_assert(I < N);
 	return std::move(v[I]);
 }
 
-template<std::size_t N, typename T = float>
+template<std::size_t N, typename T = float, std::size_t A = ((N == std::bit_ceil<size_t>(N)) ? N : 1) * alignof(T), std::size_t N_POW2 = std::bit_ceil<std::size_t>(N)>
 requires std::is_arithmetic_v<T>
 /**
  * @brief Return type used by swizzle operations.
  *
  * Produces `T` when `N == 1`, otherwise `Vec<N, T>`.
  */
-using VecOrScalar = std::conditional_t<N == 1, T, Vec<N, T>>;
+using VecOrScalar = std::conditional_t<N == 1, T, Vec<N,T,A>>;
 
 namespace detail
 {
 
-consteval auto char_to_idx(char c) -> std::size_t
+consteval SMATH_INLINE auto char_to_idx(char c) -> std::size_t
 {
 	if (c == 'r' || c == 'x' || c == 's' || c == 'u')
 		return 0;
@@ -579,7 +606,7 @@ consteval auto char_to_idx(char c) -> std::size_t
 	return static_cast<std::size_t>(-1);
 }
 
-constexpr auto is_valid(char c) -> bool
+constexpr SMATH_INLINE auto is_valid(char c) -> bool
 {
 	switch (c) {
 	case 'r':
@@ -604,7 +631,7 @@ constexpr auto is_valid(char c) -> bool
 }
 
 template<detail::FixedString S, std::size_t N, typename T, std::size_t... I>
-constexpr auto swizzle_impl(Vec<N, T> const &v, std::index_sequence<I...>)
+constexpr SMATH_INLINE auto swizzle_impl(Vec<N, T> const &v, std::index_sequence<I...>)
     -> VecOrScalar<S.size, T>
 {
 	static_assert(((is_valid(S[I])) && ...), "Invalid swizzle component");
@@ -640,24 +667,29 @@ requires detail::ValidSwizzle<S, N>
  * @param v Source vector.
  * @return Swizzled scalar/vector according to `S`.
  */
-constexpr auto swizzle(Vec<N, T> const &v) -> VecOrScalar<S.size, T>
+constexpr SMATH_INLINE auto swizzle(Vec<N, T> const &v) -> VecOrScalar<S.size, T>
 {
 	return detail::swizzle_impl<S>(v, std::make_index_sequence<S.size> {});
 }
 
 /** @brief 2D float vector alias. */
-using Vec2 = Vec<2>;
+using  Vec2 = Vec<2>;
 /** @brief 3D float vector alias. */
-using Vec3 = Vec<3>;
+using  Vec3 = Vec<3>;
 /** @brief 4D float vector alias. */
-using Vec4 = Vec<4>;
+using  Vec4 = Vec<4>;
+/** @brief 3D aligned float vector alias. */
+using AVec3 = Vec<3, float, alignof(Vec4)>;
 
 /** @brief 2D double vector alias. */
-using Vec2d = Vec<2, double>;
+using  Vec2d = Vec<2, double>;
 /** @brief 3D double vector alias. */
-using Vec3d = Vec<3, double>;
+using  Vec3d = Vec<3, double>;
 /** @brief 4D double vector alias. */
-using Vec4d = Vec<4, double>;
+using  Vec4d = Vec<4, double>;
+/** @brief 3D aligned double vector alias. */
+using AVec3d = Vec<3, double, alignof(Vec4d)>;
+
 
 template<class T>
 using angle_ret_t = std::conditional_t<std::is_same_v<T, float>, float, double>;
@@ -667,7 +699,7 @@ using angle_ret_t = std::conditional_t<std::is_same_v<T, float>, float, double>;
  * @param value Angle in degrees.
  * @return Angle in `SMATH_ANGLE_UNIT`.
  */
-template<class T> constexpr auto deg(T value)
+template<class T> constexpr SMATH_INLINE auto deg(T value)
 {
 	using R = angle_ret_t<T>;
 
@@ -686,7 +718,7 @@ template<class T> constexpr auto deg(T value)
  * @param value Angle in radians.
  * @return Angle in `SMATH_ANGLE_UNIT`.
  */
-template<class T> constexpr auto rad(T value)
+template<class T> constexpr SMATH_INLINE auto rad(T value)
 {
 	using R = angle_ret_t<T>;
 
@@ -706,7 +738,7 @@ template<class T> constexpr auto rad(T value)
  * @param value Angle in turns.
  * @return Angle in `SMATH_ANGLE_UNIT`.
  */
-template<class T> constexpr auto turns(T value)
+template<class T> constexpr SMATH_INLINE auto turns(T value)
 {
 	using R = angle_ret_t<T>;
 
@@ -720,9 +752,11 @@ template<class T> constexpr auto turns(T value)
 		return static_cast<R>(value);
 	}
 }
-template<std::size_t R, std::size_t C, typename T>
+#pragma pack(push,1)
+template<std::size_t R, std::size_t C, typename T = float, std::size_t A = std::bit_ceil<std::size_t>(alignof(Vec<R,T>) * C)>
 requires std::is_arithmetic_v<T>
-struct Mat;
+struct SMATH_INTRIN_TYPE alignas(A) Mat;
+#pragma pack(pop)
 
 /**
  * @brief Quaternion represented as `(x, y, z, w)`.
@@ -735,25 +769,25 @@ template<class T> struct Quaternion : Vec<4, T>
 	using Base::operator=;
 
 	/** @brief Returns this quaternion as its vector base type. */
-	constexpr Base &vec() noexcept { return *this; }
+	constexpr SMATH_INLINE Base &vec() noexcept { return *this; }
 	/** @brief Returns this quaternion as its vector base type. */
-	constexpr Base const &vec() const noexcept { return *this; }
+	constexpr SMATH_INLINE Base const &vec() const noexcept { return *this; }
 
-	constexpr T &x() noexcept { return Base::x(); }
-	constexpr T const &x() const noexcept { return Base::x(); }
-	constexpr T &y() noexcept { return Base::y(); }
-	constexpr T const &y() const noexcept { return Base::y(); }
-	constexpr T &z() noexcept { return Base::z(); }
-	constexpr T const &z() const noexcept { return Base::z(); }
-	constexpr T &w() noexcept { return Base::w(); }
-	constexpr T const &w() const noexcept { return Base::w(); }
+	constexpr SMATH_INLINE T &x() noexcept { return Base::x(); }
+	constexpr SMATH_INLINE T const &x() const noexcept { return Base::x(); }
+	constexpr SMATH_INLINE T &y() noexcept { return Base::y(); }
+	constexpr SMATH_INLINE T const &y() const noexcept { return Base::y(); }
+	constexpr SMATH_INLINE T &z() noexcept { return Base::z(); }
+	constexpr SMATH_INLINE T const &z() const noexcept { return Base::z(); }
+	constexpr SMATH_INLINE T &w() noexcept { return Base::w(); }
+	constexpr SMATH_INLINE T const &w() const noexcept { return Base::w(); }
 
 	/**
 	 * @brief Hamilton product.
 	 * @param rhs Right-hand quaternion.
 	 * @return Product quaternion.
 	 */
-	constexpr auto operator*(Quaternion const &rhs) const noexcept -> Quaternion
+	constexpr SMATH_INLINE auto operator*(Quaternion const &rhs) const noexcept -> Quaternion
 	{
 		Quaternion r;
 		auto const &a = *this;
@@ -774,7 +808,7 @@ template<class T> struct Quaternion : Vec<4, T>
 	 * @brief Converts this quaternion to a 4x4 rotation matrix.
 	 * @return Homogeneous rotation matrix.
 	 */
-	[[nodiscard]] constexpr auto as_matrix() const noexcept -> Mat<4, 4, T>
+	[[nodiscard]] constexpr SMATH_INLINE auto as_matrix() const noexcept -> Mat<4, 4, T>
 	{
 		auto const xx = x() * x();
 		auto const yy = y() * y();
@@ -800,7 +834,7 @@ template<class T> struct Quaternion : Vec<4, T>
 	 * @param angle Rotation angle in configured angle units.
 	 * @return Quaternion representing the rotation.
 	 */
-	[[nodiscard]] static constexpr auto from_axis_angle(
+	[[nodiscard]] static constexpr SMATH_INLINE auto from_axis_angle(
 	    Vec<3, T> const &axis, T const angle) noexcept -> Quaternion
 	{
 		auto const normalized_axis { axis.normalized_safe() };
@@ -823,7 +857,7 @@ requires std::is_floating_point_v<T>
  * @brief Packs `[0, 1]` RGBA values into 4x8-bit UNORM.
  * @return Packed 32-bit value in RGBA byte order.
  */
-[[nodiscard]] constexpr auto pack_unorm4x8(Vec<4, T> const &v) -> std::uint32_t
+[[nodiscard]] constexpr SMATH_INLINE auto pack_unorm4x8(Vec<4, T> const &v) -> std::uint32_t
 {
 	std::uint32_t r = detail::pack_unorm8(v[0]);
 	std::uint32_t g = detail::pack_unorm8(v[1]);
@@ -839,7 +873,7 @@ requires std::is_floating_point_v<T>
  * @brief Packs `[-1, 1]` RGBA values into 4x8-bit SNORM.
  * @return Packed 32-bit value in RGBA byte order.
  */
-[[nodiscard]] constexpr auto pack_snorm4x8(Vec<4, T> const &v) -> std::uint32_t
+[[nodiscard]] constexpr SMATH_INLINE auto pack_snorm4x8(Vec<4, T> const &v) -> std::uint32_t
 {
 	std::uint32_t r = static_cast<std::uint8_t>(detail::pack_snorm8(v[0]));
 	std::uint32_t g = static_cast<std::uint8_t>(detail::pack_snorm8(v[1]));
@@ -855,7 +889,7 @@ requires std::is_floating_point_v<T>
  * @brief Unpacks a 4x8-bit UNORM RGBA value.
  * @return RGBA vector with components in `[0, 1]`.
  */
-[[nodiscard]] constexpr auto unpack_unorm4x8(std::uint32_t packed) -> Vec<4, T>
+[[nodiscard]] constexpr SMATH_INLINE auto unpack_unorm4x8(std::uint32_t packed) -> Vec<4, T>
 {
 	std::uint8_t r = static_cast<std::uint8_t>(packed & 0xFFu);
 	std::uint8_t g = static_cast<std::uint8_t>((packed >> 8) & 0xFFu);
@@ -876,7 +910,7 @@ requires std::is_floating_point_v<T>
  * @brief Unpacks a 4x8-bit SNORM RGBA value.
  * @return RGBA vector with components in `[-1, 1]`.
  */
-[[nodiscard]] constexpr auto unpack_snorm4x8(std::uint32_t packed) -> Vec<4, T>
+[[nodiscard]] constexpr SMATH_INLINE auto unpack_snorm4x8(std::uint32_t packed) -> Vec<4, T>
 {
 	std::int8_t r = static_cast<std::int8_t>(packed & 0xFFu);
 	std::int8_t g = static_cast<std::int8_t>((packed >> 8) & 0xFFu);
@@ -891,7 +925,8 @@ requires std::is_floating_point_v<T>
 	};
 }
 
-template<std::size_t R, std::size_t C, typename T = float>
+#pragma pack(push,1)
+template<std::size_t R, std::size_t C, typename T, std::size_t A>
 requires std::is_arithmetic_v<T>
 /**
  * @brief Column-major matrix with `R` rows and `C` columns.
@@ -899,17 +934,17 @@ requires std::is_arithmetic_v<T>
  * @tparam C Column count.
  * @tparam T Scalar type.
  */
-struct Mat : std::array<Vec<R, T>, C>
+struct SMATH_INTRIN_TYPE alignas(A) Mat : std::array<Vec<R, T>, C>
 {
 	using Base = std::array<Vec<R, T>, C>;
 	using Base::operator[];
 
-	constexpr auto operator[](std::size_t const row, std::size_t const column)
+	constexpr SMATH_INLINE auto operator[](std::size_t const row, std::size_t const column)
 	    -> T &
 	{
 		return col(column)[row];
 	}
-	constexpr auto operator[](
+	constexpr SMATH_INLINE auto operator[](
 	    std::size_t const row, std::size_t const column) const -> T const &
 	{
 		return col(column)[row];
@@ -926,9 +961,10 @@ struct Mat : std::array<Vec<R, T>, C>
 	 * @brief Constructs a diagonal matrix.
 	 * @param diag Value used for every diagonal component.
 	 */
-	constexpr explicit Mat(T const &diag) noexcept
+	SMATH_INLINE explicit Mat(T const &diag) noexcept
 	requires(R == C)
 	{
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c) {
 			(*this)[c] = Vec<R, T> {};
 			(*this)[c][c] = diag;
@@ -942,88 +978,93 @@ struct Mat : std::array<Vec<R, T>, C>
 	 * @brief Constructs from explicit column vectors.
 	 * @param cols Columns in column-major order.
 	 */
-	constexpr Mat(Cols const &...cols) noexcept : Base { cols... }
+	constexpr SMATH_INLINE Mat(Cols const &...cols) noexcept : Base { cols... }
 	{ }
 
-	constexpr auto col(std::size_t j) noexcept -> Vec<R, T> &
+	constexpr SMATH_INLINE auto col(std::size_t j) noexcept -> Vec<R, T> &
 	{
 		return (*this)[j];
 	}
-	constexpr auto col(std::size_t j) const noexcept -> Vec<R, T> const &
+	constexpr SMATH_INLINE auto col(std::size_t j) const noexcept -> Vec<R, T> const &
 	{
 		return (*this)[j];
 	}
 
-	constexpr auto operator()(std::size_t row, std::size_t col) noexcept -> T &
+	constexpr SMATH_INLINE auto operator()(std::size_t row, std::size_t col) noexcept -> T &
 	{
 		return (*this)[col][row];
 	}
-	constexpr auto operator()(std::size_t row, std::size_t col) const noexcept
+	constexpr SMATH_INLINE auto operator()(std::size_t row, std::size_t col) const noexcept
 	    -> T const &
 	{
 		return (*this)[col][row];
 	}
 
-	constexpr auto operator-() const noexcept -> Mat
+	SMATH_INLINE auto operator-() const noexcept -> Mat
 	{
 		Mat r {};
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			r[c] = -(*this)[c];
 		return r;
 	}
 
-	constexpr auto operator+=(Mat const &rhs) noexcept -> Mat &
+	SMATH_INLINE auto operator+=(Mat const &rhs) noexcept -> Mat &
 	{
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			(*this)[c] += rhs[c];
 		return *this;
 	}
-	constexpr auto operator-=(Mat const &rhs) noexcept -> Mat &
+	SMATH_INLINE auto operator-=(Mat const &rhs) noexcept -> Mat &
 	{
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			(*this)[c] -= rhs[c];
 		return *this;
 	}
-	friend constexpr auto operator+(Mat lhs, Mat const &rhs) noexcept -> Mat
+	friend constexpr SMATH_INLINE auto operator+(Mat lhs, Mat const &rhs) noexcept -> Mat
 	{
 		lhs += rhs;
 		return lhs;
 	}
-	friend constexpr auto operator-(Mat lhs, Mat const &rhs) noexcept -> Mat
+	friend constexpr SMATH_INLINE auto operator-(Mat lhs, Mat const &rhs) noexcept -> Mat
 	{
 		lhs -= rhs;
 		return lhs;
 	}
 
-	constexpr auto operator*=(T const &s) noexcept -> Mat &
+	SMATH_INLINE auto operator*=(T const &s) noexcept -> Mat &
 	{
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			(*this)[c] *= s;
 		return *this;
 	}
-	constexpr auto operator/=(T const &s) noexcept -> Mat &
+	SMATH_INLINE auto operator/=(T const &s) noexcept -> Mat &
 	{
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			(*this)[c] /= s;
 		return *this;
 	}
-	friend constexpr auto operator*(Mat lhs, T const &s) noexcept -> Mat
+	friend constexpr SMATH_INLINE auto operator*(Mat lhs, T const &s) noexcept -> Mat
 	{
 		lhs *= s;
 		return lhs;
 	}
-	friend constexpr auto operator*(T const &s, Mat rhs) noexcept -> Mat
+	friend constexpr SMATH_INLINE auto operator*(T const &s, Mat rhs) noexcept -> Mat
 	{
 		rhs *= s;
 		return rhs;
 	}
-	friend constexpr auto operator/(Mat lhs, T const &s) noexcept -> Mat
+	friend constexpr SMATH_INLINE auto operator/(Mat lhs, T const &s) noexcept -> Mat
 	{
 		lhs /= s;
 		return lhs;
 	}
 
-	[[nodiscard]] constexpr auto operator==(Mat const &rhs) const noexcept
+	[[nodiscard]] constexpr SMATH_INLINE auto operator==(Mat const &rhs) const noexcept
 	    -> bool
 	{
 		for (std::size_t c = 0; c < C; ++c)
@@ -1031,7 +1072,7 @@ struct Mat : std::array<Vec<R, T>, C>
 				return false;
 		return true;
 	}
-	[[nodiscard]] constexpr auto operator!=(Mat const &rhs) const noexcept
+	[[nodiscard]] constexpr SMATH_INLINE auto operator!=(Mat const &rhs) const noexcept
 	    -> bool
 	{
 		return !(*this == rhs);
@@ -1047,7 +1088,7 @@ struct Mat : std::array<Vec<R, T>, C>
 	 */
 	template<class U = T>
 	requires std::is_floating_point_v<U>
-	[[nodiscard]] constexpr auto approx_equal(
+	[[nodiscard]] constexpr SMATH_INLINE auto approx_equal(
 	    Mat const &rhs, U eps = EPS_DEFAULT) const noexcept -> bool
 	{
 		for (std::size_t c = 0; c < C; ++c)
@@ -1057,9 +1098,10 @@ struct Mat : std::array<Vec<R, T>, C>
 	}
 
 	/** @brief Returns the transposed matrix. */
-	[[nodiscard]] constexpr auto transposed() const noexcept -> Mat<C, R, T>
+	[[nodiscard]] SMATH_INLINE auto transposed() const noexcept -> Mat<C, R, T>
 	{
 		Mat<C, R, T> r {};
+		#pragma omp simd
 		for (std::size_t c = 0; c < C; ++c)
 			for (std::size_t r_idx = 0; r_idx < R; ++r_idx)
 				r(r_idx, c) = (*this)(c, r_idx);
@@ -1067,15 +1109,17 @@ struct Mat : std::array<Vec<R, T>, C>
 	}
 
 	/** @brief Returns an identity matrix. */
-	[[nodiscard]] static constexpr auto identity() noexcept -> Mat<R, C, T>
+	[[nodiscard]] static SMATH_INLINE auto identity() noexcept -> Mat<R, C, T>
 	requires(R == C)
 	{
 		Mat<R, C, T> m {};
+		#pragma omp simd
 		for (std::size_t i = 0; i < R; ++i)
 			m(i, i) = T(1);
 		return m;
 	}
 };
+#pragma pack(pop)
 
 /** @brief 2x2 float matrix alias. */
 using Mat2 = Mat<2, 2>;
@@ -1096,10 +1140,11 @@ template<std::size_t R, std::size_t C, typename T>
  * @brief Matrix-vector multiplication.
  * @return Product vector.
  */
-[[nodiscard]] constexpr Vec<R, T> operator*(
+[[nodiscard]] SMATH_INLINE Vec<R, T> operator*(
     Mat<R, C, T> const &m, Vec<C, T> const &v) noexcept
 {
 	Vec<R, T> out {};
+	#pragma omp simd reduction(+:out)
 	for (std::size_t c = 0; c < C; ++c)
 		out += m.col(c) * v[c];
 	return out;
@@ -1110,13 +1155,14 @@ template<std::size_t R, std::size_t C, typename T>
  * @return Product matrix.
  */
 template<std::size_t R, std::size_t C, std::size_t K, typename T>
-[[nodiscard]] constexpr Mat<R, K, T> operator*(
+[[nodiscard]] SMATH_INLINE Mat<R, K, T> operator*(
     Mat<R, C, T> const &a, Mat<C, K, T> const &b) noexcept
 {
 	Mat<R, K, T> out {};
 	for (std::size_t k = 0; k < K; ++k) {
 		for (std::size_t r = 0; r < R; ++r) {
 			T sum = T(0);
+			#pragma omp simd reduction(+:sum)
 			for (std::size_t c = 0; c < C; ++c)
 				sum += a(r, c) * b(c, k);
 			out(r, k) = sum;
@@ -1130,7 +1176,7 @@ template<std::size_t R, std::size_t C, std::size_t K, typename T>
 
 /** @brief Applies translation to an existing 3x3 transform. */
 template<typename T>
-[[nodiscard]] inline auto translate(Mat<3, 3, T> const &m, Vec<2, T> const &v)
+[[nodiscard]] SMATH_INLINE auto translate(Mat<3, 3, T> const &m, Vec<2, T> const &v)
     -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res { m };
@@ -1140,7 +1186,7 @@ template<typename T>
 
 /** @brief Creates a 3x3 translation matrix. */
 template<typename T>
-[[nodiscard]] inline auto translate(Vec<2, T> const &v) -> Mat<3, 3, T>
+[[nodiscard]] SMATH_INLINE auto translate(Vec<2, T> const &v) -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res { 1 };
 	res[2].x() = v.x();
@@ -1150,7 +1196,7 @@ template<typename T>
 
 /** @brief Applies rotation to an existing 3x3 transform. */
 template<typename T>
-[[nodiscard]] inline auto rotate(Mat<3, 3, T> const &m, T const angle)
+[[nodiscard]] SMATH_INLINE auto rotate(Mat<3, 3, T> const &m, T const angle)
     -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res;
@@ -1167,7 +1213,7 @@ template<typename T>
 
 /** @brief Applies scaling to an existing 3x3 transform. */
 template<typename T>
-[[nodiscard]] inline auto scale(Mat<3, 3, T> const &m, Vec<2, T> const &v)
+[[nodiscard]] SMATH_INLINE auto scale(Mat<3, 3, T> const &m, Vec<2, T> const &v)
     -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res;
@@ -1181,7 +1227,7 @@ template<typename T>
 
 /** @brief Applies X shear to an existing 3x3 transform. */
 template<typename T>
-[[nodiscard]] inline auto shear_x(Mat<3, 3, T> const &m, T const v)
+[[nodiscard]] SMATH_INLINE auto shear_x(Mat<3, 3, T> const &m, T const v)
     -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res { 1 };
@@ -1191,7 +1237,7 @@ template<typename T>
 
 /** @brief Applies Y shear to an existing 3x3 transform. */
 template<typename T>
-[[nodiscard]] inline auto shear_y(Mat<3, 3, T> const &m, T const v)
+[[nodiscard]] SMATH_INLINE auto shear_y(Mat<3, 3, T> const &m, T const v)
     -> Mat<3, 3, T>
 {
 	Mat<3, 3, T> res { 1 };
@@ -1206,7 +1252,7 @@ template<typename T>
 
 /** @brief Applies translation to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto translate(Mat<4, 4, T> const &m, Vec<3, T> const &v)
+[[nodiscard]] SMATH_INLINE auto translate(Mat<4, 4, T> const &m, Vec<3, T> const &v)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res { m };
@@ -1216,7 +1262,7 @@ template<typename T>
 
 /** @brief Creates a 4x4 translation matrix. */
 template<typename T>
-[[nodiscard]] inline auto translate(Vec<3, T> const &v) -> Mat<4, 4, T>
+[[nodiscard]] SMATH_INLINE auto translate(Vec<3, T> const &v) -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res { 1 };
 	res[3].x() = v.x();
@@ -1227,7 +1273,7 @@ template<typename T>
 
 /** @brief Applies rotation to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto rotate(Mat<4, 4, T> const &m, T const angle)
+[[nodiscard]] SMATH_INLINE auto rotate(Mat<4, 4, T> const &m, T const angle)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res;
@@ -1245,7 +1291,7 @@ template<typename T>
 
 /** @brief Applies scaling to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto scale(Mat<4, 4, T> const &m, Vec<3, T> const &v)
+[[nodiscard]] SMATH_INLINE auto scale(Mat<4, 4, T> const &m, Vec<3, T> const &v)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res;
@@ -1260,7 +1306,7 @@ template<typename T>
 
 /** @brief Applies X shear to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto shear_x(Mat<4, 4, T> const &m, T const v)
+[[nodiscard]] SMATH_INLINE auto shear_x(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res { 1 };
@@ -1270,7 +1316,7 @@ template<typename T>
 
 /** @brief Applies Y shear to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto shear_y(Mat<4, 4, T> const &m, T const v)
+[[nodiscard]] SMATH_INLINE auto shear_y(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res { 1 };
@@ -1280,7 +1326,7 @@ template<typename T>
 
 /** @brief Applies Z shear to an existing 4x4 transform. */
 template<typename T>
-[[nodiscard]] inline auto shear_z(Mat<4, 4, T> const &m, T const v)
+[[nodiscard]] SMATH_INLINE auto shear_z(Mat<4, 4, T> const &m, T const v)
     -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> res { 1 };
@@ -1300,7 +1346,7 @@ template<typename T>
  * @return Orthographic projection matrix.
  */
 template<typename T>
-[[nodiscard]] inline auto matrix_ortho3d(T const left,
+[[nodiscard]] SMATH_INLINE auto matrix_ortho3d(T const left,
     T const right,
     T const bottom,
     T const top,
@@ -1329,7 +1375,7 @@ template<typename T>
  * @brief Builds a finite perspective projection matrix.
  */
 template<typename T>
-inline auto matrix_perspective(
+SMATH_INLINE auto matrix_perspective(
     T fovy, T aspect, T znear, T zfar, bool flip_z_axis = false) -> Mat<4, 4, T>
 {
 	Mat<4, 4, T> m {};
@@ -1358,7 +1404,7 @@ inline auto matrix_perspective(
  * @brief Builds a right-handed look-at view matrix.
  */
 template<typename T>
-[[nodiscard]] inline auto matrix_look_at(
+[[nodiscard]] SMATH_INLINE auto matrix_look_at(
     Vec<3, T> const eye, Vec<3, T> const center, Vec<3, T> const up)
     -> Mat<4, 4, T>
 {
@@ -1378,7 +1424,7 @@ template<typename T>
  * @brief Builds a perspective matrix with an infinite far plane.
  */
 template<typename T>
-[[nodiscard]] inline auto matrix_infinite_perspective(
+[[nodiscard]] SMATH_INLINE auto matrix_infinite_perspective(
     T const fovy, T const aspect, T const znear, bool flip_z_axis = false)
     -> Mat<4, 4, T>
 {
@@ -1412,7 +1458,7 @@ template<class Ext> struct interop_adapter;
  * @brief Converts an external value into its mapped smath type.
  */
 template<class Ext>
-constexpr auto from_external(Ext const &ext) ->
+constexpr SMATH_INLINE auto from_external(Ext const &ext) ->
     typename interop_adapter<Ext>::smath_type
 {
 	return interop_adapter<Ext>::to_smath(ext);
@@ -1422,7 +1468,7 @@ constexpr auto from_external(Ext const &ext) ->
  * @brief Converts a smath value into an external type.
  */
 template<class Ext, class SMathT>
-constexpr auto to_external(SMathT const &value) -> Ext
+constexpr SMATH_INLINE auto to_external(SMathT const &value) -> Ext
 {
 	return interop_adapter<Ext>::from_smath(value);
 }
@@ -1433,7 +1479,7 @@ template<std::size_t N, typename T>
 requires std::formattable<T, char>
 struct std::formatter<smath::Vec<N, T>> : std::formatter<T>
 {
-	constexpr auto parse(std::format_parse_context &ctx)
+	constexpr SMATH_INLINE auto parse(std::format_parse_context &ctx)
 	{
 		return std::formatter<T>::parse(ctx);
 	}

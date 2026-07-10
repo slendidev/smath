@@ -14,10 +14,12 @@ using ::smath::VecOrScalar;
 using ::smath::Vec2;
 using ::smath::Vec3;
 using ::smath::Vec4;
+using ::smath::AVec3;
 
 using ::smath::Vec2d;
 using ::smath::Vec3d;
 using ::smath::Vec4d;
+using ::smath::AVec3d;
 
 using ::smath::Mat2;
 using ::smath::Mat3;
